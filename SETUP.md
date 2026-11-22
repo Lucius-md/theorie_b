@@ -35,6 +35,7 @@ Mollie vraagt bij aanmelding een **KvK-nummer**. Zonder KvK kun je nog geen echt
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role key (geheim!) |
 | `MOLLIE_API_KEY` | `test_...` of `live_...` |
 | `SITE_URL` | `https://theoriesaid.site` |
+| `ADMIN_EMAILS` | `sli726428@gmail.com` (beheerders, gescheiden door komma's) |
 | `BTCPAY_URL`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY`, `BTCPAY_WEBHOOK_SECRET` | alleen voor Bitcoin |
 
 Daarna: **Deployments → Redeploy**.
@@ -58,3 +59,8 @@ select extend_subscription((select id from auth.users where email='naam@voorbeel
 
 ## Lessen aanpassen
 De lessen staan in `src/app.html` en `src/questions.js`. Na een wijziging: `python3 tools/build.py` en committen (dat maakt `api/app.js` opnieuw).
+
+## Beheerpaneel
+Ga naar `https://theoriesaid.site/admin` terwijl je bent ingelogd met een e-mailadres uit `ADMIN_EMAILS` (bevestigd via de mail).
+Daar zie je omzet en aantallen, maak je kortingscodes, geef of stop je toegang voor gebruikers en zie je alle betalingen.
+Beheerders hebben zelf altijd toegang tot de lessen.

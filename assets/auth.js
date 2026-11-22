@@ -206,7 +206,7 @@
     if (!d) { d = document.createElement('dialog'); d.id = 'acctdlg'; d.className = 'acctdlg'; document.body.appendChild(d); }
     const until = new Date(st.paid_until);
     const left = Math.max(0, Math.ceil((until - Date.now()) / 864e5));
-    d.innerHTML = `<form method="dialog"><h3>Mijn account <span lang="ar">· حسابي</span></h3><p><b>${esc(st.email)}</b></p><p>Toegang tot <b>${until.toLocaleDateString('nl-NL')}</b> (nog ${left} dagen).</p><p class="small">Je voortgang wordt bewaard in je account, dus ook op je telefoon en computer.</p><div class="row"><button class="btn ghost" value="close">Sluiten</button><button class="btn" type="button" id="lo">Uitloggen</button></div></form>`;
+    d.innerHTML = `<form method="dialog"><h3>Mijn account <span lang="ar">· حسابي</span></h3><p><b>${esc(st.email)}</b></p><p>${st.admin ? 'Beheerder: altijd toegang.' : `Toegang tot <b>${until.toLocaleDateString('nl-NL')}</b> (nog ${left} dagen).`}</p><p class="small">Je voortgang wordt bewaard in je account, dus ook op je telefoon en computer.</p>${st.admin ? '<p><a class="btn ghost" href="/admin">Beheerpaneel openen</a></p>' : ''}<div class="row"><button class="btn ghost" value="close">Sluiten</button><button class="btn" type="button" id="lo">Uitloggen</button></div></form>`;
     d.querySelector('#lo').onclick = logout; d.showModal();
   }
 

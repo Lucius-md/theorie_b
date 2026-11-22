@@ -65,7 +65,13 @@ function handler(fn, methods = ['POST']) {
   };
 }
 
+// Admins: comma-separated e-mails in env ADMIN_EMAILS (only on the server). E-mail must be confirmed.
+const isAdmin = u => {
+  const list = String(process.env.ADMIN_EMAILS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
+  return !!(u && u.email && list.includes(u.email.toLowerCase()) && (u.email_confirmed_at || u.confirmed_at));
+};
+
 // Price after a percentage code; never below €0.
 const priceFor = percent => Math.max(0, Math.round(PRICE * (100 - (percent || 0))) / 100);
 
-module.exports = { PRICE, DAYS, env, SITE, send, readBody, sb, rpc, getUser, paidUntil, isActive, handler, priceFor };
+module.exports = { isAdmin, PRICE, DAYS, env, SITE, send, readBody, sb, rpc, getUser, paidUntil, isActive, handler, priceFor };
