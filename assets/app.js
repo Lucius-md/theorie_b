@@ -99,7 +99,14 @@ function renderFavs(){const ids=Object.keys(P.fav).sort((a,b)=>P.fav[b]-P.fav[a]
    Reads block by block, highlights the block that is being read, and can start from any tapped paragraph. */
 const TTS=(()=>{const syn=window.speechSynthesis;if(!syn||!window.SpeechSynthesisUtterance)return{ok:false};
  let voices=[];const loadV=()=>{voices=syn.getVoices()};loadV();if(syn.addEventListener)syn.addEventListener('voiceschanged',loadV);
- const pick=lang=>{const v=voices.filter(x=>x.lang&&x.lang.toLowerCase().startsWith(lang));return v.find(x=>/google|premium|enhanced|natural|siri/i.test(x.name))||v[0]||null};
+ /* best female voice per language: natural/neural first, Levantine Arabic preferred, male voices last; the user can override */
+ const FEMALE=/fenna|colette|dena|claire|ellen|lotte|google nederlands|amany|layla|laila|sana|salma|zariyah|fatima|mouna|noura|hala|aisha|mariam|maryam|yasmin|reem|female|vrouw|woman/i;
+ const MALE=/xander|maarten|arnaud|majed|maged|tarik|hamdan|shakir|laith|taim|omar|hamed|bassel|rami|naayf|fahed|male\b|man\b/i;
+ const score=(x,lang)=>{const n=x.name||'';let s=0;if(FEMALE.test(n))s+=60;if(MALE.test(n))s-=80;if(/natural|neural|online|premium|enhanced|siri|wavenet/i.test(n))s+=35;
+  if(lang==='ar'&&/ar[-_](sy|lb|jo|ps)/i.test(x.lang))s+=25;if(lang==='nl'&&/nl[-_]nl/i.test(x.lang))s+=10;if(x.localService===false)s+=5;return s};
+ const forLang=lang=>voices.filter(x=>x.lang&&x.lang.toLowerCase().replace('_','-').startsWith(lang));
+ const pick=lang=>{const v=forLang(lang);let chosen=null;try{const id=localStorage.getItem('tb-voice-'+lang);if(id)chosen=v.find(x=>x.voiceURI===id)}catch(_){}
+  return chosen||v.slice().sort((a,b)=>score(b,lang)-score(a,lang))[0]||null};
  const st={queue:[],i:0,mode:'nl',rate:1,on:false,paused:false,cur:null,gen:0};
  const SKIP='button,svg,.kode,.ol,.vmark,script,style,.qprev,.favb,.b3d,[aria-hidden=true]';
  const textOf=(el,lang)=>{const c=el.cloneNode(true);c.querySelectorAll(SKIP).forEach(x=>x.remove());if(lang==='nl')c.querySelectorAll('[lang=ar],.ar,.arinline,.arcol,.qa').forEach(x=>x.remove());
@@ -119,9 +126,9 @@ const TTS=(()=>{const syn=window.speechSynthesis;if(!syn||!window.SpeechSynthesi
  const mark=el=>{if(st.cur)st.cur.classList.remove('tts-now');st.cur=el;if(el){el.classList.add('tts-now');const r=el.getBoundingClientRect();if(r.top<80||r.bottom>innerHeight-120)el.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'})}};
  const sayBlock=()=>{const g=st.gen;if(st.i>=st.queue.length){stop();return}const b=st.queue[st.i];mark(b.el);const v=pick(b.lang);
   if(b.lang==='ar'&&!v&&!st.warned){st.warned=1;toast(null,'Je toestel heeft geen Arabische stem. Installeer die in de instellingen (Toegankelijkheid → Gesproken materiaal).','جهازك ما فيه صوت عربي. نزّله من الإعدادات (إمكانية الوصول ← المحتوى المنطوق).')}
-  const chunks=split(b.t);let k=0;const next=()=>{if(g!==st.gen)return;if(k>=chunks.length){st.i++;upd();sayBlock();return}const u=new SpeechSynthesisUtterance(chunks[k++]);u.lang=b.lang==='ar'?'ar-SA':'nl-NL';if(v)try{u.voice=v}catch(_){};u.rate=st.rate*(b.lang==='ar'?.95:1);u.onend=next;u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled')next()};syn.speak(u)};next()};
+  const chunks=split(b.t);let k=0;const next=()=>{if(g!==st.gen)return;if(k>=chunks.length){st.i++;upd();sayBlock();return}const u=new SpeechSynthesisUtterance(chunks[k++]);u.lang=b.lang==='ar'?'ar-SA':'nl-NL';if(v)try{u.voice=v}catch(_){};u.rate=st.rate*(b.lang==='ar'?.93:.97);u.pitch=v&&FEMALE.test(v.name)?1.05:1;u.onend=next;u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled')next()};syn.speak(u)};next()};
  const bar=document.createElement('div');bar.className='ttsplayer';bar.hidden=true;bar.setAttribute('role','region');bar.setAttribute('aria-label','Voorlezen');
- bar.innerHTML=`<span class="ttsico">${ico('speak')}</span><div class="ttsinfo"><b id="ttsTitle">Voorlezen</b><small id="ttsPos"></small></div><button class="tbtn" id="ttsPlay" aria-label="Pauze">${ico('pause')}</button><button class="tbtn" id="ttsSkip" aria-label="Volgende stuk">${ico('skip')}</button><button class="tbtn txt" id="ttsRate" aria-label="Snelheid">1×</button><button class="tbtn txt" id="ttsLang" aria-label="Taal">NL</button><button class="tbtn" id="ttsStop" aria-label="Stoppen">${ico('stop')}</button>`;
+ bar.innerHTML=`<span class="ttsico">${ico('speak')}</span><div class="ttsinfo"><b id="ttsTitle">Voorlezen</b><small id="ttsPos"></small></div><button class="tbtn" id="ttsPlay" aria-label="Pauze">${ico('pause')}</button><button class="tbtn" id="ttsSkip" aria-label="Volgende stuk">${ico('skip')}</button><button class="tbtn txt" id="ttsRate" aria-label="Snelheid">1×</button><button class="tbtn txt" id="ttsLang" aria-label="Taal">NL</button><button class="tbtn" id="ttsVoice" aria-label="Stem kiezen" title="Stem kiezen · اختار الصوت">${ico('speak')}</button><button class="tbtn" id="ttsStop" aria-label="Stoppen">${ico('stop')}</button>`;
  document.body.appendChild(bar);
  const LBL={nl:'NL',ar:'ع',both:'NL+ع'};
  const upd=()=>{bar.hidden=!st.on;document.body.classList.toggle('tts-on',st.on);$('#ttsPos',bar).textContent=st.on?`${Math.min(st.i+1,st.queue.length)} / ${st.queue.length} · tik op een tekst om daar te beginnen`:'';$('#ttsPlay',bar).innerHTML=ico(st.paused?'play':'pause');$('#ttsPlay',bar).setAttribute('aria-label',st.paused?'Verder':'Pauze');$('#ttsLang',bar).textContent=LBL[st.mode];$('#ttsRate',bar).textContent=st.rate+'×'};
@@ -129,6 +136,14 @@ const TTS=(()=>{const syn=window.speechSynthesis;if(!syn||!window.SpeechSynthesi
   if(!st.queue.length){toast(null,'Hier is niets om voor te lezen.','ما في شي ينقرا هون.');return}st.on=true;st.paused=false;$('#ttsTitle',bar).textContent=title||'Voorlezen';upd();setTimeout(sayBlock,60)}
  function stop(){st.gen++;syn.cancel();st.on=false;st.paused=false;mark(null);upd()}
  $('#ttsStop',bar).onclick=stop;
+ /* choose and test the voice per language */
+ $('#ttsVoice',bar).onclick=()=>{const row=lang=>{const v=forLang(lang).sort((a,b)=>score(b,lang)-score(a,lang));const cur=pick(lang);
+   return `<label class="vrow"><span>${lang==='nl'?'Nederlandse stem':'الصوت العربي'}</span><select data-vl="${lang}">${v.length?v.map(x=>`<option value="${esc(x.voiceURI)}"${cur&&cur.voiceURI===x.voiceURI?' selected':''}>${esc(x.name)}${FEMALE.test(x.name)?' ♀':''} (${esc(x.lang)})</option>`).join(''):'<option value="">Geen stem op dit toestel</option>'}</select><button class="btn ghost sm" data-vt="${lang}" type="button">▶ Test</button></label>`};
+  openModal(`<div class="vset"><h3>Stem kiezen <span lang="ar">· اختار الصوت</span></h3>${row('nl')}${row('ar')}
+   <p class="small">Een vrouwenstem staat standaard bovenaan (♀). Zie je geen mooie stem? Op een iPhone: Instellingen → Toegankelijkheid → Gesproken materiaal → Stemmen, en download een stem met “Verbeterd” of “Premium”. Op Android: Instellingen → Tekst-naar-spraak.</p>
+   <p class="small" lang="ar" dir="rtl">الأصوات النسائية بتطلع أول (♀). إذا ما عجبك الصوت: عالآيفون الإعدادات ← تسهيلات الاستخدام ← المحتوى المنطوق ← الأصوات، ونزّل صوت «محسّن» أو «Premium». عالأندرويد: الإعدادات ← تحويل النص إلى كلام.</p></div>`);
+  $$('#mbody select[data-vl]').forEach(sel=>sel.onchange=()=>{try{localStorage.setItem('tb-voice-'+sel.dataset.vl,sel.value)}catch(_){}});
+  $$('#mbody [data-vt]').forEach(b=>b.onclick=()=>{const lang=b.dataset.vt;syn.cancel();const u=new SpeechSynthesisUtterance(lang==='nl'?'Hallo! Ik lees de theorie voor je voor.':'أهلا! أنا رح إقرالك شرح النظرية.');u.lang=lang==='nl'?'nl-NL':'ar-SA';const v=pick(lang);if(v)u.voice=v;u.pitch=v&&FEMALE.test(v.name)?1.05:1;u.rate=.95;syn.speak(u)})};
  $('#ttsPlay',bar).onclick=()=>{if(st.paused){st.paused=false;if(syn.paused)syn.resume();else{st.gen++;sayBlock()}}else{st.paused=true;syn.pause();/* iOS sometimes ignores pause: */setTimeout(()=>{if(st.paused&&syn.speaking&&!syn.paused){st.gen++;syn.cancel()}},250)}upd()};
  $('#ttsSkip',bar).onclick=()=>{st.gen++;syn.cancel();st.i++;st.paused=false;upd();sayBlock()};
  $('#ttsRate',bar).onclick=()=>{const R=[0.8,1,1.2];st.rate=R[(R.indexOf(st.rate)+1)%R.length];upd();if(st.on&&!st.paused){st.gen++;syn.cancel();sayBlock()}};

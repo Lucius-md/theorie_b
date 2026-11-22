@@ -652,3 +652,7 @@ body.landing{background:var(--bg)}
 .stage::after{content:"said";position:absolute;right:12px;bottom:10px;z-index:3;font:800 italic 22px/1 Overpass,Arial,sans-serif;letter-spacing:.04em;color:#ffffffb3;text-shadow:0 1px 3px #0007;pointer-events:none}
 .stage.r3d.r3ready::after{display:none}
 .wm{position:absolute;right:12px;bottom:10px;z-index:3;font:800 italic 22px/1 Overpass,Arial,sans-serif;letter-spacing:.04em;color:#ffffffc4;text-shadow:0 1px 3px #0008;pointer-events:none}
+.vset h3{margin-top:0}
+.vrow{display:grid;grid-template-columns:1fr;gap:6px;margin:12px 0;font-weight:700}
+.vrow select{font:500 15px inherit;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;max-width:100%}
+.vrow .btn{justify-self:start}
