@@ -4,6 +4,7 @@
 const BL='#2563eb',RD='#dc2b2b',GR='#16a34a',GY='#8b95a3',WH='#f1f3f6';
 const RMQ=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let GLOK=null;const RMQ_LOW=()=>{if(GLOK===null){try{const c=document.createElement('canvas');const g=c.getContext('webgl2')||c.getContext('webgl');GLOK=!!g;g&&g.getExtension('WEBGL_lose_context')?.loseContext()}catch(e){GLOK=false}}return !GLOK};
 const FONT='font-family="Overpass,Arial,sans-serif"';
 
 /* ---------- road builders ---------- */
@@ -58,8 +59,8 @@ const distance=()=>roadH()+`<g transform="translate(200 22)"><ellipse cx="2" cy=
 const stripes=()=>{const pan=(x,y,line,lab)=>`<g transform="translate(${x} ${y})"><rect width="146" height="118" rx="10" fill="url(#asph2)"/>${line}<rect x="8" y="124" width="130" height="24" rx="12" fill="#0b111acc"/><text x="73" y="141" font-size="12" font-weight="800" text-anchor="middle" fill="#fff" ${FONT}>${lab}</text></g>`;
  const cb=(c,da)=>`<rect y="96" width="146" height="22" fill="url(#walk)"/><path d="M0 96H146" stroke="#e4e6ea" stroke-width="2"/><path d="M0 91H146" stroke="${c}" stroke-width="5" ${da?'stroke-dasharray="13 9"':''}/>`;
  return `<rect width="320" height="330" fill="url(#grass)"/>`+pan(10,8,'<path d="M73 0V118" stroke="#f4f4f4" stroke-width="5"/>','doorgetrokken')+pan(164,8,'<path d="M73 0V118" stroke="#f4f4f4" stroke-width="5" stroke-dasharray="18 12"/>','onderbroken')+pan(10,170,cb('#ffc21a'),'geel: stilstaan verboden')+pan(164,170,cb('#ffc21a',1),'geel: parkeren verboden')};
-const post=(x,y,k,sc=.42)=>`<g transform="translate(${x} ${y})"><ellipse cx="2" cy="44" rx="7" ry="3" fill="#000" opacity=".25"/><rect x="-1.6" y="2" width="3.2" height="42" rx="1.5" fill="#9aa3ad"/><g transform="translate(${-50*sc} ${-100*sc+6}) scale(${sc})">${SG[k][1]}</g></g>`;
-const tlight=(x,y,id,rot=0)=>`<g class="tlight" data-l="${id}" transform="translate(${x} ${y}) rotate(${rot})"><rect x="-6" y="-16" width="12" height="32" rx="3" fill="#15181c" stroke="#3b4048"/><circle class="lr" cx="0" cy="-9" r="3.6" fill="#4a1010"/><circle class="ly" cx="0" cy="0" r="3.6" fill="#4a3810"/><circle class="lg" cx="0" cy="9" r="3.6" fill="#0f3a1f"/></g>`;
+const post=(x,y,k,sc=.42)=>`<g class="post" data-x="${x}" data-y="${y}" data-k="${k}" transform="translate(${x} ${y})"><ellipse cx="2" cy="44" rx="7" ry="3" fill="#000" opacity=".25"/><rect x="-1.6" y="2" width="3.2" height="42" rx="1.5" fill="#9aa3ad"/><g transform="translate(${-50*sc} ${-100*sc+6}) scale(${sc})">${SG[k][1]}</g></g>`;
+const tlight=(x,y,id,rot=0)=>`<g class="tlight" data-l="${id}" data-x="${x}" data-y="${y}" data-r="${rot}" transform="translate(${x} ${y}) rotate(${rot})"><rect x="-6" y="-16" width="12" height="32" rx="3" fill="#15181c" stroke="#3b4048"/><circle class="lr" cx="0" cy="-9" r="3.6" fill="#4a1010"/><circle class="ly" cx="0" cy="0" r="3.6" fill="#4a3810"/><circle class="lg" cx="0" cy="9" r="3.6" fill="#0f3a1f"/></g>`;
 
 /* ---------- vehicles (top view, facing up; realistic proportions ~1m = 10px) ---------- */
 const BODY='M-9 -23 Q0 -24.6 9 -23 Q10.6 -22 10.7 -17.5 L10.9 17.5 Q10.7 22.4 8.6 23.2 Q0 24.5 -8.6 23.2 Q-10.7 22.4 -10.9 17.5 L-10.7 -17.5 Q-10.6 -22 -9 -23 Z';
@@ -214,7 +215,16 @@ const HAZ=[
  {id:'h5',d:{h:210,scene:roadH,label:'De auto vlak voor je remt plotseling hard.',a:[{k:'car',c:GY,p:'M170 138 H560'},{k:'car',c:BL,me:1,p:'M40 138 H460'}]},
   tl:{dur:2100,tracks:[{i:0,rest:false,keys:[[0,0],[1300,.2],[2100,.24]]},{i:1,rest:false,keys:[[0,0],[1300,.2],[2100,.31]]}]},a:0,
   e:'De auto vlak voor je remt hard: zijn remlichten gaan aan en de afstand wordt snel kleiner. Je moet nu remmen.',ea:'السيارة اللي قدامك فرملت قوي، ضو الفرامل اشتغل والمسافة عم تصغر بسرعة. لازم تفرمل هلق.'}
-];
+,
+ {id:'h6',d:{scene:()=>street({bay:1,park:1}),label:'Woonstraat met geparkeerde auto’s. Tussen de auto’s staat een kind dat de straat op wil.',a:[PARK(70),PARK(146),{k:'walk',p:'M214 110 H150'},{k:'car',c:BL,me:1,p:'M180 340 V-40'}]},
+  tl:{dur:2400,tracks:[{i:2,keys:[[0,0],[1500,0],[2400,.45]]},{i:3,rest:false,keys:[[0,0],[2400,.36]]}]},a:0,
+  e:'Een kind stapt tussen geparkeerde auto’s de straat op, vlak voor je. Je remt meteen.',ea:'ولد طالع من بين السيارات المصفوفة عالشارع، وقريب منك. بتفرمل فوراً.'},
+ {id:'h7',d:{scene:()=>street({bay:1,park:1}),label:'Een fietser rijdt voor je. Verderop staat een geparkeerde auto op zijn weg.',a:[PARK(92),{k:'bike',p:'M190 300 V170 Q190 140 170 120 V-40'},{k:'car',c:BL,me:1,p:'M180 400 V-40'}]},
+  tl:{dur:2300,tracks:[{i:1,rest:false,keys:[[0,0],[2300,.36]]},{i:2,rest:false,keys:[[0,0],[2300,.3]]}]},a:1,
+  e:'De fietser moet zo uitwijken voor de geparkeerde auto en komt dan voor je rijden. Er is nog ruimte: gas loslaten en afstand houden.',ea:'الدراجة رح تطلع لنص الطريق لتمرق جنب السيارة المصفوفة. لسا في مسافة: شيل رجلك وخلّي مسافة.'},
+ {id:'h8',d:{h:210,scene:roadH,label:'Je rijdt op een rechte weg. Achter je nadert een ambulance met zwaailicht en sirene.',a:[{k:'amb',p:'M-200 138 H460'},{k:'car',c:BL,me:1,p:'M60 138 H460'}]},
+  tl:{dur:2200,tracks:[{i:0,rest:false,keys:[[0,0],[2200,.42]]},{i:1,rest:false,keys:[[0,0],[2200,.16]]}]},a:1,
+  e:'Een ambulance met zwaailicht en sirene wil erlangs. Gas loslaten, rustig opzij en ruimte maken. Niet plotseling remmen.',ea:'إسعاف مشغّل الضو والصفارة بدو يمرق. شيل رجلك، تنحّى بهدوء وافسحله الطريق، وما تفرمل فجأة.'}];
 
 /* =========================================================
    ENGINE
@@ -292,5 +302,13 @@ function buildScene(el,d,key,opt={}){
  svg.addEventListener('click',e=>{const g=e.target.closest('.act');if(g)pickAct(g)});
  svg.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const g=e.target.closest('.act');if(g){e.preventDefault();pickAct(g)}});
  S.reset();
- stage.querySelector('.b3d').addEventListener('click',e=>{const on=stage.classList.toggle('d3');e.currentTarget.setAttribute('aria-pressed',on)});
+ S.H=H;S.opt=opt;
+ /* real 3D view (three.js), loaded only when the scene is on screen */
+ const b3=stage.querySelector('.b3d');
+ const want3d=()=>{try{return localStorage.getItem('tb-3d')!=='0'}catch(e){return true}};
+ const go3d=()=>import('./scene3d.js').then(m=>m.attach(S)).catch(e=>{console.warn('3D niet beschikbaar',e);stage.classList.remove('r3d');b3.hidden=true});
+ b3.setAttribute('aria-pressed',want3d());b3.title='3D aan/uit';
+ b3.addEventListener('click',e=>{const on=!stage.classList.contains('r3d');try{localStorage.setItem('tb-3d',on?'1':'0')}catch(_){}
+  b3.setAttribute('aria-pressed',on);if(on){stage.classList.add('r3d');go3d()}else{stage.classList.remove('r3d');S.view3d&&S.view3d.destroy()}});
+ if(want3d()&&!RMQ_LOW()){stage.classList.add('r3d');go3d()}
  return S}
