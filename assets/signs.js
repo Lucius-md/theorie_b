@@ -37,7 +37,7 @@ const SG={
  E1:['c',`<circle cx="50" cy="50" r="47.5" fill="${R}"/><circle cx="50" cy="50" r="36" fill="${B}"/><path d="M25.5 25.5 L74.5 74.5" stroke="${R}" stroke-width="10"/><circle cx="50" cy="50" r="47" fill="none" stroke="#fff" stroke-width="1.2" opacity=".8"/>`],
  E2:['c',`<circle cx="50" cy="50" r="47.5" fill="${R}"/><circle cx="50" cy="50" r="36" fill="${B}"/><path d="M25.5 25.5 L74.5 74.5 M74.5 25.5 L25.5 74.5" stroke="${R}" stroke-width="10"/><circle cx="50" cy="50" r="47" fill="none" stroke="#fff" stroke-width="1.2" opacity=".8"/>`],
  Dup:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M50 17 L71 42 H57.5 V81 H42.5 V42 H29 Z" fill="#fff"/>`],
- Drot:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><g fill="none" stroke="#fff" stroke-width="8"><path d="M50 23 A27 27 0 0 1 73 62"/><path d="M67 70 A27 27 0 0 1 26 62"/><path d="M24 48 A27 27 0 0 1 40 25"/></g><g fill="#fff"><path d="M62 58 L84 58 L76 77 Z"/><path d="M32 71 L17 55 L12 74 Z"/><path d="M35 12 L52 24 L35 33 Z"/></g>`],
+ Drot:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><g transform="translate(100 0) scale(-1 1)"><g fill="none" stroke="#fff" stroke-width="8"><path d="M50 23 A27 27 0 0 1 73 62"/><path d="M67 70 A27 27 0 0 1 26 62"/><path d="M24 48 A27 27 0 0 1 40 25"/></g><g fill="#fff"><path d="M62 58 L84 58 L76 77 Z"/><path d="M32 71 L17 55 L12 74 Z"/><path d="M35 12 L52 24 L35 33 Z"/></g></g>`],
  Fiets:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="61" r="12"/><circle cx="70" cy="61" r="12"/><path d="M30 61 L43 41 H61 L70 61 M43 41 L52 61 L61 41 M38 34 H48"/></g>`],
  B1:['r',`<path d="M50 2 L98 50 L50 98 L2 50 Z" fill="#fff"/><path d="M50 4.5 L95.5 50 L50 95.5 L4.5 50 Z" fill="none" stroke="#222" stroke-width="1.6"/><path d="M50 18 L82 50 L50 82 L18 50 Z" fill="${Y}"/>`],
  B2:['r',`<path d="M50 2 L98 50 L50 98 L2 50 Z" fill="#fff"/><path d="M50 4.5 L95.5 50 L50 95.5 L4.5 50 Z" fill="none" stroke="#222" stroke-width="1.6"/><path d="M50 18 L82 50 L50 82 L18 50 Z" fill="${Y}"/><path d="M30 70 L70 30 M23 59 L59 23 M41 77 L77 41" stroke="${K}" stroke-width="5.5"/>`],
@@ -92,8 +92,8 @@ Object.assign(SG,{
  A2:['c',`<circle cx="50" cy="50" r="46" fill="#fff" stroke="#2a2a2a" stroke-width="2.5"/>${T('50',34,62,'#9a9a9a')}<path d="M24 76 L76 24 M18 66 L66 18 M34 82 L82 34" stroke="#2a2a2a" stroke-width="3"/>`],
  A4:['s',boxS(T('70',40,64,'#fff'))],
  B4:['t',warnS(`<path d="M52 38 V77" stroke="${K}" stroke-width="10"/><path d="M52 58 H33" stroke="${K}" stroke-width="4.5"/>`)],
- J9:['t',warnS(`<g fill="none" stroke="${K}" stroke-width="4.5"><path d="M50 47 A12 12 0 0 1 61 63"/><path d="M57 70 A12 12 0 0 1 39 64"/><path d="M38 56 A12 12 0 0 1 46 47"/></g><g fill="${K}"><path d="M56 61 L66 61 L62 69 Z"/><path d="M42 69 L34 62 L33 71 Z"/><path d="M44 42 L52 47 L44 52 Z"/></g>`)],
- C3:['s',boxS(`<path d="M50 16 L70 40 H57 V84 H43 V40 H30 Z" fill="#fff"/>`)],
+ J9:['t',warnS(`<g transform="translate(100 0) scale(-1 1)"><g fill="none" stroke="${K}" stroke-width="4.5"><path d="M50 47 A12 12 0 0 1 61 63"/><path d="M57 70 A12 12 0 0 1 39 64"/><path d="M38 56 A12 12 0 0 1 46 47"/></g><g fill="${K}"><path d="M56 61 L66 61 L62 69 Z"/><path d="M42 69 L34 62 L33 71 Z"/><path d="M44 42 L52 47 L44 52 Z"/></g></g>`)],
+ C3:['s',`<rect x="3" y="24" width="94" height="52" rx="8" fill="${B}"/><rect x="8" y="29" width="84" height="42" rx="5" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M16 46 H66 V36 L86 50 L66 64 V54 H16 Z" fill="#fff"/>`],
  D2:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M50 17 L71 42 H57.5 V81 H42.5 V42 H29 Z" fill="#fff" transform="rotate(135 50 50)"/>`],
  D7:['c',`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M42 84 V36 M42 58 H66" stroke="#fff" stroke-width="10" fill="none"/><path d="M42 18 L56 38 H28 Z M82 58 L64 44 V72 Z" fill="#fff"/>`],
  L8:['s',boxS(`<rect x="42" y="38" width="16" height="46" fill="#fff"/><rect x="24" y="22" width="52" height="16" fill="${R}"/>`)],
@@ -115,7 +115,7 @@ Object.assign(SG,{
  C10:['c',ringS(`<g transform="translate(-2 2)">${miniCar(38,46,K)}<rect x="56" y="44" width="18" height="12" rx="2" fill="${K}"/><path d="M52 52 H56" stroke="${K}" stroke-width="2"/><circle cx="65" cy="58" r="3.4" fill="${K}"/></g>`)],
  C14:['c',ringS(`<g fill="none" stroke="${K}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 52) scale(.62) translate(-50 -61)"><circle cx="30" cy="61" r="12"/><circle cx="70" cy="61" r="12"/><path d="M30 61 L43 41 H61 L70 61 M43 41 L52 61 L61 41"/></g>`)],
  C16:['c',ringS(person(50,56,K,1.2))],
- C19:['c',ringS(`${T('3.5m',17,57)}<path d="M50 22 L44 30 H56 Z M50 78 L44 70 H56 Z" fill="${K}"/>`)],
+ C19:['c',ringS(`${T('3,5 m',17,57)}<path d="M50 22 L44 30 H56 Z M50 78 L44 70 H56 Z" fill="${K}"/>`)],
  F1:['c',ringS(`<g transform="translate(36 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="${R}"/><rect x="-6" y="-9" width="12" height="6" rx="1.5" fill="#fff"/></g><g transform="translate(64 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="${K}"/><rect x="-6" y="-9" width="12" height="6" rx="1.5" fill="#fff"/></g>`)],
  F7:['c',ringS(`<path d="M60 74 V44 A10 10 0 0 0 40 44 V60" stroke="${K}" stroke-width="5.5" fill="none"/><path d="M32 56 L40 68 L48 56 Z" fill="${K}"/><path d="M24 76 L76 24" stroke="${R}" stroke-width="6"/>`)],
  E6:['s',boxS(`<circle cx="44" cy="26" r="5.5" fill="#fff"/><path d="M44 33 V54 H62 L68 72" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M36 50 A16 16 0 1 0 60 66" stroke="#fff" stroke-width="5" fill="none"/>`)],
@@ -127,7 +127,7 @@ Object.assign(SG,{
 /* ---------- complete catalogue (bestaande teksten + nieuwe borden) ---------- */
 const CAT={verbod:'Verbod',gebod:'Gebod',voorrang:'Voorrang',waarschuwing:'Waarschuwing',aanwijzing:'Aanwijzing',parkeren:'Parkeren',matrix:'Matrixborden'};
 const CATAR={verbod:'ممنوع',gebod:'إجباري',voorrang:'أفضلية',waarschuwing:'تحذير',aanwijzing:'إرشاد',parkeren:'صف',matrix:'لوحات إلكترونية'};
-const CODES={C1:'C1',C2:'C2',A50:'A1',E1:'E1',E2:'E2',Dup:'D4',Drot:'D1',Fiets:'G11',B1:'B1',B2:'B2',B3:'B3',B6:'B6',B7:'B7',J8:'J8',Jx:'J37',G1:'G1',G3:'G3',G5:'G5',L2:'L2',E4:'E4',Z30:'E10-30',Mx:'Matrix',Mv:'A3',Mp:'Matrix',Mg:'Matrix'};
+const CODES={C1:'C1',C2:'C2',A50:'A1',E1:'E1',E2:'E2',Dup:'D4',Drot:'D1',Fiets:'G11',B1:'B1',B2:'B2',B3:'B3',B6:'B6',B7:'B7',J8:'J8',Jx:'J37',G1:'G1',G3:'G3',G5:'G5',L2:'L2',E4:'E4',Z30:'A1 (zone)',Mx:'Matrix',Mv:'Matrix',Mp:'Matrix',Mg:'Matrix'};
 const EXTRA=[
  ['A2','A2','verbod','Einde maximumsnelheid','Vanaf hier geldt de gewone maximumsnelheid voor deze weg weer.','نهاية السرعة المحددة: من هون بترجع السرعة العادية للطريق.'],
  ['A4','A4','aanwijzing','Adviessnelheid','Een advies, geen verplichting. Bijvoorbeeld voor een scherpe bocht of afrit.','سرعة استشارية (نصيحة مو إجبار)، مثلاً قبل كوع حاد أو مخرج.'],
@@ -137,7 +137,7 @@ const EXTRA=[
  ['C14','C14','verbod','Gesloten voor fietsen','Hier mag je niet fietsen.','ممنوع الدراجات.'],
  ['C16','C16','verbod','Gesloten voor voetgangers','Voetgangers mogen hier niet lopen.','ممنوع المشاة.'],
  ['C19','C19','verbod','Maximale hoogte','Gesloten voor voertuigen die hoger zijn dan het getal op het bord.','ممنوع للمركبات الأعلى من الرقم.'],
- ['F1','F1','verbod','Inhaalverbod','Je mag hier geen motorvoertuigen inhalen (wel bijvoorbeeld fietsers).','ممنوع تتجاوز المركبات بمحرك (الدراجات مسموح).'],
+ ['F1','F1','verbod','Inhaalverbod','Je mag hier geen motorvoertuigen inhalen (wel bijvoorbeeld fietsers).','ممنوع تتجاوز المركبات اللي إلها محرك. تجاوز الدراجات الهوائية مسموح.'],
  ['F7','F7','verbod','Keerverbod','Je mag hier niet keren (omdraaien).','ممنوع اللف والرجوع (U-turn).'],
  ['D2','D2','gebod','Passeerplicht','Je moet het bord passeren aan de kant waar de pijl naar wijst.','لازم تمرق من الجهة اللي السهم مأشّر عليها.'],
  ['D7','D7','gebod','Verplichte keuze rijrichting','Je moet één van de aangegeven richtingen volgen.','لازم تختار وحدة من الاتجاهات المحددة.'],
