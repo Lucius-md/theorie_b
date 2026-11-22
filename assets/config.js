@@ -2,6 +2,6 @@
    Vul hier je eigen Supabase-gegevens in (Supabase → Project Settings → API). */
 window.TB_CONFIG = {
   SUPABASE_URL: 'https://JOUW-PROJECT.supabase.co',
-  SUPABASE_ANON_KEY: 'JOUW-ANON-KEY',
+  SUPABASE_ANON_KEY: 'JOUW-PUBLISHABLE-KEY', // sb_publishable_... (of de oude anon key)
   PRICE: '10'
 };

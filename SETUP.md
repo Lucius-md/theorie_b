@@ -18,10 +18,11 @@ Mollie vraagt bij aanmelding een **KvK-nummer**. Zonder KvK kun je nog geen echt
 2. **SQL Editor** → plak de inhoud van `supabase/schema.sql` → **Run**.
 3. **Authentication → Providers → Email**: aan. “Confirm email” mag aan blijven.
 4. **Authentication → URL Configuration**: Site URL = `https://theoriesaid.site`, en voeg dezelfde toe bij Redirect URLs.
-5. **Project Settings → API**: kopieer
-   - Project URL → in `assets/config.js` bij `SUPABASE_URL`
-   - `anon` `public` key → in `assets/config.js` bij `SUPABASE_ANON_KEY`
-   - `service_role` key → **alleen** in Vercel (stap 3), nooit in de code.
+5. **Project Settings → API Keys** (tab “Publishable and secret API keys”): kopieer
+   - Project URL (Project Settings → Data API) → in `assets/config.js` bij `SUPABASE_URL`
+   - **Publishable key** (`sb_publishable_...`) → in `assets/config.js` bij `SUPABASE_ANON_KEY`
+   - **Secret key** (`sb_secret_...`) → **alleen** in Vercel als `SUPABASE_SERVICE_ROLE_KEY`, nooit in de code.
+   (De oude `anon`/`service_role` keys werken ook, maar Supabase stopt ermee eind 2026.)
 
 ## Stap 2 – Mollie
 1. Account op mollie.com, profiel voor `theoriesaid.site`.
