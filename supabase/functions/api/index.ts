@@ -11,7 +11,7 @@ const ORIGINS = [SITE, 'https://www.theoriesaid.site', 'https://theorieb.vercel.
 
 const adminHeaders = (): Record<string, string> => SECRET ? { apikey: SECRET } : { apikey: LEGACY!, Authorization: 'Bearer ' + LEGACY };
 class HttpError extends Error { constructor(public status: number, msg: string) { super(msg); } }
-const fail = (status: number, msg: string) => { throw new HttpError(status, msg); };
+const fail = (status: number, msg: string): never => { throw new HttpError(status, msg); };
 
 async function sb(path: string, opt: RequestInit = {}) {
   const r = await fetch(SB + path, { ...opt, headers: { ...adminHeaders(), 'Content-Type': 'application/json', ...(opt.headers as Record<string, string> || {}) } });
