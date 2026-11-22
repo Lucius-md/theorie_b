@@ -72,12 +72,12 @@ $('#parkSigns').innerHTML=['E6','E10'].map(k=>signCard([k,SBYK[k].n,SBYK[k].u,SB
 const modal=$('#modal');let lastFocus=null;
 const BG=()=>[$('header'),$('#main'),$('.side'),$('#nextnav')].filter(Boolean);
 function openModal(html,cls=''){if(!modal.classList.contains('open'))lastFocus=document.activeElement;$('#mbody').innerHTML=html;modal.className='modal open '+cls;modal.removeAttribute('aria-hidden');BG().forEach(x=>x.inert=true);fixAr($('#mbody'));setTimeout(()=>($('#mbody [autofocus]')||$('#mclose')).focus(),40)}
-function closeModal(){modal.className='modal';modal.setAttribute('aria-hidden','true');BG().forEach(x=>x.inert=false);if(lastFocus&&lastFocus.isConnected)lastFocus.focus()}
+function closeModal(){if(typeof TTS!=='undefined'&&TTS.ok&&modal.querySelector('.tts-now'))TTS.stop();modal.className='modal';modal.setAttribute('aria-hidden','true');BG().forEach(x=>x.inert=false);if(lastFocus&&lastFocus.isConnected)lastFocus.focus()}
 modal.setAttribute('aria-hidden','true');
 modal.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const f=$$('button,input,a[href],[tabindex]:not([tabindex="-1"])',modal).filter(x=>!x.disabled&&x.offsetParent!==null);if(!f.length)return;const a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}});
 $('#mclose').onclick=closeModal;modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
 addEventListener('keydown',e=>{if(e.key==='Escape'){if(modal.classList.contains('open'))closeModal();document.body.classList.remove('menu')}});
-function signModal(k){const s=SBYK[k];if(!s)return;openModal(`<div class="smodal"><div class="sbig">${sign(k,s.n)}</div><div><span class="kode">${s.code}</span><span class="kode alt">${CAT[s.cat]||''}</span><h3>${s.n}</h3><p>${s.u}</p><div class="ar">${s.a}</div><button class="btn sm ${P.fav['s:'+k]?'isfav':''}" data-fav="s:${k}" autofocus>${ico('star')} ${P.fav['s:'+k]?'In favorieten':'Bewaar als favoriet'}</button></div></div>`,'wide')}
+function signModal(k){const s=SBYK[k];if(!s)return;openModal(`<div class="smodal"><div class="sbig">${sign(k,s.n)}</div><div><span class="kode">${s.code}</span><span class="kode alt">${CAT[s.cat]||''}</span><h3>${s.n}</h3><p>${s.u}</p><div class="ar">${s.a}</div><button class="btn sm ${P.fav['s:'+k]?'isfav':''}" data-fav="s:${k}" autofocus>${ico('star')} ${P.fav['s:'+k]?'In favorieten':'Bewaar als favoriet'}</button>${TTS.ok?` <button class="btn ghost sm msay">${ico('speak')} Lees voor</button>`:''}</div></div>`,'wide')}
 document.addEventListener('click',e=>{const f=e.target.closest('[data-fav]');if(f){e.stopPropagation();toggleFav(f.dataset.fav,f);return}
  const s=e.target.closest('[data-sign]');if(s&&!e.target.closest('.flash'))signModal(s.dataset.sign)});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.sign[data-sign]')){e.preventDefault();signModal(e.target.dataset.sign)}});
@@ -94,8 +94,54 @@ function renderFavs(){const ids=Object.keys(P.fav).sort((a,b)=>P.fav[b]-P.fav[a]
  (Q.length?`<h3>Vragen</h3><div class="qlist">${Q.map(i=>{const q=ALLQ.find(x=>x.id===i.slice(2));return q?qCard(q,'fav'):''}).join('')}</div>`:'');fixAr($('#favs'));syncFav()}
 
 /* ---------- practice questions ---------- */
+/* ---------- voorlezen (text-to-speech) ----------
+   Uses the browser's own voices (Web Speech API): Dutch for the lesson text, Arabic for the Arabic explanation.
+   Reads block by block, highlights the block that is being read, and can start from any tapped paragraph. */
+const TTS=(()=>{const syn=window.speechSynthesis;if(!syn||!window.SpeechSynthesisUtterance)return{ok:false};
+ let voices=[];const loadV=()=>{voices=syn.getVoices()};loadV();if(syn.addEventListener)syn.addEventListener('voiceschanged',loadV);
+ const pick=lang=>{const v=voices.filter(x=>x.lang&&x.lang.toLowerCase().startsWith(lang));return v.find(x=>/google|premium|enhanced|natural|siri/i.test(x.name))||v[0]||null};
+ const st={queue:[],i:0,mode:'nl',rate:1,on:false,paused:false,cur:null,gen:0};
+ const SKIP='button,svg,.kode,.ol,.vmark,script,style,.qprev,.favb,.b3d,[aria-hidden=true]';
+ const textOf=(el,lang)=>{const c=el.cloneNode(true);c.querySelectorAll(SKIP).forEach(x=>x.remove());if(lang==='nl')c.querySelectorAll('[lang=ar],.ar,.arinline,.arcol,.qa').forEach(x=>x.remove());
+  let t=c.textContent.replace(/\s+/g,' ').replace(/[·•→←✓✗⏸]/g,' ').trim();
+  if(lang==='nl')t=t.replace(/(\d+)\s?km\/u/g,'$1 kilometer per uur').replace(/(\d+)\s?m\b/g,'$1 meter').replace(/(\d+)\s?kg\b/g,'$1 kilo').replace(/\bRVV\b/g,'R V V').replace(/\bCBR\b/g,'C B R').replace(/\bADAS\b/g,'adas').replace(/(\d),(\d)/g,'$1 komma $2');
+  else t=t.replace(/(\d+)\s?كم\/س/g,'$1 كيلومتر بالساعة').replace(/(\d+)\s?كغ/g,'$1 كيلو').replace(/(\d),(\d)/g,'$1 فاصلة $2');
+  return t};
+ const isAr=el=>el.matches('.ar,[lang=ar],.qa');
+ /* collect readable blocks in reading order */
+ const collect=(root,mode)=>{const out=[];const sel='h2,h3,h4,p,li,td:first-child,.tip,.ar,.qq,.qa,.opt,.qexp>p,summary,figcaption,.example,.exam';
+  root.querySelectorAll(sel).forEach(el=>{if(el.closest('[hidden],.modal:not(.open),details:not([open])>*:not(summary)'))return;if(el.offsetParent===null&&!el.closest('.modal.open'))return;
+   if(el.parentElement.closest(sel)&&!el.matches('.ar,.opt,li,.qa'))return; /* avoid reading nested blocks twice */
+   const ar=isAr(el)||!!el.closest('.ar,[lang=ar]');if(ar&&mode==='nl')return;if(!ar&&mode==='ar'&&!el.matches('h2,h3'))return;
+   if(el.matches('.tip,.example,.exam')&&el.querySelector('p,li'))return;
+   const lang=ar?'ar':'nl';const t=textOf(el,lang);if(t.length>1)out.push({el,lang,t})});return out};
+ const split=t=>{const parts=t.match(/[^.!?؟…]+[.!?؟…]*/g)||[t];const out=[];parts.forEach(p=>{p=p.trim();while(p.length>220){const k=p.lastIndexOf(' ',220);out.push(p.slice(0,k>0?k:220));p=p.slice(k>0?k:220)}if(p)out.push(p)});return out};
+ const mark=el=>{if(st.cur)st.cur.classList.remove('tts-now');st.cur=el;if(el){el.classList.add('tts-now');const r=el.getBoundingClientRect();if(r.top<80||r.bottom>innerHeight-120)el.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'})}};
+ const sayBlock=()=>{const g=st.gen;if(st.i>=st.queue.length){stop();return}const b=st.queue[st.i];mark(b.el);const v=pick(b.lang);
+  if(b.lang==='ar'&&!v&&!st.warned){st.warned=1;toast(null,'Je toestel heeft geen Arabische stem. Installeer die in de instellingen (Toegankelijkheid → Gesproken materiaal).','جهازك ما فيه صوت عربي. نزّله من الإعدادات (إمكانية الوصول ← المحتوى المنطوق).')}
+  const chunks=split(b.t);let k=0;const next=()=>{if(g!==st.gen)return;if(k>=chunks.length){st.i++;upd();sayBlock();return}const u=new SpeechSynthesisUtterance(chunks[k++]);u.lang=b.lang==='ar'?'ar-SA':'nl-NL';if(v)try{u.voice=v}catch(_){};u.rate=st.rate*(b.lang==='ar'?.95:1);u.onend=next;u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled')next()};syn.speak(u)};next()};
+ const bar=document.createElement('div');bar.className='ttsplayer';bar.hidden=true;bar.setAttribute('role','region');bar.setAttribute('aria-label','Voorlezen');
+ bar.innerHTML=`<span class="ttsico">${ico('speak')}</span><div class="ttsinfo"><b id="ttsTitle">Voorlezen</b><small id="ttsPos"></small></div><button class="tbtn" id="ttsPlay" aria-label="Pauze">${ico('pause')}</button><button class="tbtn" id="ttsSkip" aria-label="Volgende stuk">${ico('skip')}</button><button class="tbtn txt" id="ttsRate" aria-label="Snelheid">1×</button><button class="tbtn txt" id="ttsLang" aria-label="Taal">NL</button><button class="tbtn" id="ttsStop" aria-label="Stoppen">${ico('stop')}</button>`;
+ document.body.appendChild(bar);
+ const LBL={nl:'NL',ar:'ع',both:'NL+ع'};
+ const upd=()=>{bar.hidden=!st.on;document.body.classList.toggle('tts-on',st.on);$('#ttsPos',bar).textContent=st.on?`${Math.min(st.i+1,st.queue.length)} / ${st.queue.length} · tik op een tekst om daar te beginnen`:'';$('#ttsPlay',bar).innerHTML=ico(st.paused?'play':'pause');$('#ttsPlay',bar).setAttribute('aria-label',st.paused?'Verder':'Pauze');$('#ttsLang',bar).textContent=LBL[st.mode];$('#ttsRate',bar).textContent=st.rate+'×'};
+ function start(root,mode,from,title){syn.cancel();st.gen++;st.mode=mode||st.mode;st.root=root;st.queue=collect(root,st.mode);st.i=0;if(from){const k=st.queue.findIndex(b=>b.el===from||from.contains(b.el)||b.el.contains(from));if(k>=0)st.i=k}
+  if(!st.queue.length){toast(null,'Hier is niets om voor te lezen.','ما في شي ينقرا هون.');return}st.on=true;st.paused=false;$('#ttsTitle',bar).textContent=title||'Voorlezen';upd();setTimeout(sayBlock,60)}
+ function stop(){st.gen++;syn.cancel();st.on=false;st.paused=false;mark(null);upd()}
+ $('#ttsStop',bar).onclick=stop;
+ $('#ttsPlay',bar).onclick=()=>{if(st.paused){st.paused=false;if(syn.paused)syn.resume();else{st.gen++;sayBlock()}}else{st.paused=true;syn.pause();/* iOS sometimes ignores pause: */setTimeout(()=>{if(st.paused&&syn.speaking&&!syn.paused){st.gen++;syn.cancel()}},250)}upd()};
+ $('#ttsSkip',bar).onclick=()=>{st.gen++;syn.cancel();st.i++;st.paused=false;upd();sayBlock()};
+ $('#ttsRate',bar).onclick=()=>{const R=[0.8,1,1.2];st.rate=R[(R.indexOf(st.rate)+1)%R.length];upd();if(st.on&&!st.paused){st.gen++;syn.cancel();sayBlock()}};
+ $('#ttsLang',bar).onclick=()=>{const M=['nl','ar','both'];const m=M[(M.indexOf(st.mode)+1)%M.length];const cur=st.queue[st.i]&&st.queue[st.i].el;start(st.root,m,cur,$('#ttsTitle',bar).textContent)};
+ /* tap a paragraph while reading = continue from there */
+ document.addEventListener('click',e=>{if(!st.on||e.target.closest('button,a,input,.ttsplayer,.act,svg'))return;const el=e.target.closest('p,li,h3,.ar,.tip,td,.qq,.qa');if(el&&st.root&&st.root.contains(el))start(st.root,st.mode,el,$('#ttsTitle',bar).textContent)});
+ addEventListener('hashchange',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.on&&!st.paused){$('#ttsPlay',bar).click()}});
+ /* read one short thing right away (question, sign, explanation) */
+ const sayNow=(el,title)=>start(el,'both',null,title);
+ return{ok:true,start,stop,sayNow}})();
+
 const ORD={};function qOrd(q,fresh){if(fresh||!ORD[q.id]||ORD[q.id].length!==q.o.length){const a=q.o.map((_,i)=>i);for(let k=a.length-1;k>0;k--){const r=Math.floor(Math.random()*(k+1));[a[k],a[r]]=[a[r],a[k]]}ORD[q.id]=a}return ORD[q.id]}
-function qCard(q,ctx){const st=(P.quiz[q.t]||{})[q.id];const ex=ctx==='exam'||ctx==='review';const ord=qOrd(q);return `<div class="qcard" data-qid="${q.id}" data-ctx="${ctx}"><div class="qhead">${ex?'':`<span class="qtag">${QT[q.t]}</span><button class="favb" data-fav="q:${q.id}" aria-label="Favoriet">${ico('star')}</button>`}</div><p class="qq">${q.q}</p><p class="qa" lang="ar" dir="rtl">${q.qa}</p><div class="opts" role="group" aria-label="Antwoorden">${ord.map((i,p)=>`<button class="opt" data-i="${i}"><span class="ol" aria-hidden="true">${'ABCD'[p]}</span>${q.o[i]}</button>`).join('')}</div><div class="qexp" hidden aria-live="polite"></div>${st!==undefined&&!ex?`<span class="qprev ${st?'ok':'no'}">${st?'eerder goed':'eerder fout'}</span>`:''}</div>`}
+function qCard(q,ctx){const st=(P.quiz[q.t]||{})[q.id];const ex=ctx==='exam'||ctx==='review';const ord=qOrd(q);return `<div class="qcard" data-qid="${q.id}" data-ctx="${ctx}"><div class="qhead">${ex?(TTS.ok?`<button class="favb qsay" aria-label="Lees de vraag voor">${ico('speak')}</button>`:''):`<span class="qtag">${QT[q.t]}</span>${TTS.ok?`<button class="favb qsay" aria-label="Lees de vraag voor">${ico('speak')}</button>`:''}<button class="favb" data-fav="q:${q.id}" aria-label="Favoriet">${ico('star')}</button>`}</div><p class="qq">${q.q}</p><p class="qa" lang="ar" dir="rtl">${q.qa}</p><div class="opts" role="group" aria-label="Antwoorden">${ord.map((i,p)=>`<button class="opt" data-i="${i}"><span class="ol" aria-hidden="true">${'ABCD'[p]}</span>${q.o[i]}</button>`).join('')}</div><div class="qexp" hidden aria-live="polite"></div>${st!==undefined&&!ex?`<span class="qprev ${st?'ok':'no'}">${st?'eerder goed':'eerder fout'}</span>`:''}</div>`}
 function answer(card,i){if(card.classList.contains('done'))return;const q=ALLQ.find(x=>x.id===card.dataset.qid);const ok=i===q.a;card.classList.add('done',ok?'right':'wrong');
  $$('.opt',card).forEach(b=>{const j=+b.dataset.i;b.disabled=true;if(j===q.a){b.classList.add('correct');b.insertAdjacentHTML('beforeend','<span class="vmark"> ✓ goed</span>')}if(j===i&&!ok){b.classList.add('incorrect');b.insertAdjacentHTML('beforeend','<span class="vmark"> ✗ jouw keuze</span>')}});
  const ex=$('.qexp',card);ex.hidden=false;ex.innerHTML=`<p><b>${ok?'Goed!':'Niet goed.'}</b> ${q.e}</p><div class="ar">${q.ea}</div>`;fixAr(ex);
@@ -142,6 +188,7 @@ $$('[data-d]').forEach(el=>{const key=el.dataset.d,d=DG[key];if(!d)return;
  box.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const g=e.target.closest('#simstage .act');if(g&&!answered){e.preventDefault();choose(+g.dataset.i)}});
  $('#simprev').onclick=()=>load(i-1);$('#simnext').onclick=()=>load(i+1);$('#simreplay').onclick=()=>{if(answered&&!S.busy)S.play()};load(0)})();
 
+document.addEventListener('click',e=>{const b=e.target.closest('.qsay');if(b&&TTS.ok)TTS.sayNow(b.closest('.qcard'),'Vraag');const m=e.target.closest('.msay');if(m&&TTS.ok)TTS.sayNow(m.closest('.smodal'),'Verkeersbord')});
 /* ---------- gevaarherkenning clips ---------- */
 (()=>{const box=$('#hazard');if(!box||typeof HAZ==='undefined')return;const OPT=[['Remmen','فرمل'],['Gas loslaten','شيل رجلك'],['Niets','ولا شي']];
  box.innerHTML=HAZ.map((h,k)=>`<div class="diag haz" data-h="${k}"><div class="hscene"></div><div><span class="kode">Filmpje ${k+1} van ${HAZ.length}</span><h3>Wat doe je?</h3><button class="btn sm hplay">${ico('play')} Start filmpje <span lang="ar" class="arcol arinline">· شغّل</span></button><div class="opts hopts" role="group" aria-label="Wat doe je?" hidden>${OPT.map((o,j)=>`<button class="opt" data-j="${j}"><span class="ol" aria-hidden="true">${'ABC'[j]}</span>${o[0]} <span lang="ar" class="arcol arinline">· ${o[1]}</span></button>`).join('')}</div><div class="qexp" hidden aria-live="polite"></div></div></div>`).join('');
@@ -298,6 +345,8 @@ function endbar(h){const i=F.findIndex(f=>f[0]===h);if(i<0){nav.innerHTML='';ret
 const endIO=new IntersectionObserver(es=>es.forEach(e=>{clearTimeout(autoT);const h=location.hash.slice(1);if(e.isIntersecting&&LESSONS.includes(h)&&P.read[h]===undefined){autoT=setTimeout(()=>{if(location.hash.slice(1)!==h)return;P.read[h]=1;save();endbar(h);toast(true,'Les automatisch als gelezen gemarkeerd.','انعلّم الدرس كمقروء تلقائياً.')},2200)}}),{threshold:.9});/* reading counted only after real scrolling: */endIO.observe(nav);
 
 /* header favourite for lessons */
+if(TTS.ok)$$('.view').forEach(v=>{const h=v.id.slice(2);if(h==='start')return;const h2=$('h2',v);if(!h2)return;const t=h2.firstChild?h2.firstChild.textContent.trim():'';h2.insertAdjacentHTML('afterend',`<div class="ttsbar"><button class="btn ghost sm ttsgo" data-m="nl">${ico('speak')} Lees voor <span lang="ar" class="arcol arinline">· اسمع بالهولندي</span></button><button class="btn ghost sm ttsgo" data-m="ar">${ico('speak')} <span lang="ar">اسمع الشرح بالعربي</span></button><button class="btn ghost sm ttsgo" data-m="both">${ico('speak')} NL + <span lang="ar">عربي</span></button></div>`);
+ $$('.ttsgo',v).forEach(b=>b.onclick=()=>TTS.start(v,b.dataset.m,null,t))});
 $$('.view').forEach(v=>{const h=v.id.slice(2);if(!LESSONS.includes(h))return;const h2=$('h2',v);if(h2)h2.insertAdjacentHTML('beforeend',` <button class="favb inh" data-fav="l:${h}" aria-label="Les als favoriet">${ico('star')}</button>`)});
 
 /* ---------- reveal + routing ---------- */

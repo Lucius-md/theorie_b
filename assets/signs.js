@@ -1,5 +1,5 @@
 /* ---------- icons (consistent 24px line set) ---------- */
-const IC={
+const IC={speak:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.8a9 9 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',skip:'<path d="M5 5l9 7-9 7z"/><rect x="16" y="5" width="3" height="14" rx="1"/>',
  start:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
  borden:'<path d="M12 3l9.5 16.5h-19z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/>',
  voorrang:'<path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"/><path d="M12 6v12" stroke-dasharray="2 3"/>',
