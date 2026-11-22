@@ -40,7 +40,7 @@
   }
   async function api(path, opt = {}) {
     const t = await token(); if (!t) throw Object.assign(new Error('Log opnieuw in.'), { status: 401 });
-    const r = await fetch('/api/' + path, { ...opt, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } });
+    const r = await fetch(C.SUPABASE_URL + '/functions/v1/api/' + path, { ...opt, headers: { Authorization: 'Bearer ' + t, apikey: C.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw Object.assign(new Error(j.error || 'Er ging iets mis.'), { status: r.status, data: j });
     return j;
@@ -126,7 +126,7 @@
       ${expired ? `<p class="amsg no">Je abonnement is verlopen op ${until.toLocaleDateString('nl-NL')}. Verleng het om verder te leren.</p>` : ''}
       <div class="paycard"><div class="price"><b>€${esc(C.PRICE || st.price)}</b><span>per jaar · 365 dagen toegang</span></div>
         <p class="ar" lang="ar" dir="rtl">اشتراك سنة كاملة بـ ${esc(C.PRICE || st.price)} يورو.</p>
-        <button class="btn" id="pay">Betalen met iDEAL, Apple Pay, kaart of overschrijving</button>
+        ${st.payments === false ? '<p class="amsg">Online betalen komt binnenkort. Heb je een code? Vul hem hieronder in.</p>' : '<button class="btn" id="pay">Betalen met iDEAL, Apple Pay, kaart of overschrijving</button>'}
         ${st.bitcoin ? '<button class="btn ghost" id="paybtc">Betalen met Bitcoin</button>' : ''}
         <p class="small">Je betaalt één keer. Er is <b>geen automatische verlenging</b>. Bij een bankoverschrijving krijg je toegang zodra het geld binnen is (1–2 werkdagen).</p>
       </div>
@@ -140,7 +140,7 @@
       try { const j = await api('checkout', { method: 'POST', body: JSON.stringify({ code, method }) }); location.href = j.url; }
       catch (err) { msg(err.message, 'no'); busy(b, false); }
     };
-    $('#pay').onclick = () => pay('mollie');
+    if ($('#pay')) $('#pay').onclick = () => pay('mollie');
     if ($('#paybtc')) $('#paybtc').onclick = () => pay('bitcoin');
     $('#cform').onsubmit = async e => {
       e.preventDefault(); const c = e.target.code.value.trim().toUpperCase(); if (!c) return;

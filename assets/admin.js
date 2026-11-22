@@ -17,7 +17,7 @@
   }
   async function call(action, data = {}) {
     const t = await token(); if (!t) throw new Error('Log eerst in op de site.');
-    const r = await fetch('/api/admin', { method: 'POST', headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
+    const r = await fetch(C.SUPABASE_URL + '/functions/v1/api/admin', { method: 'POST', headers: { Authorization: 'Bearer ' + t, apikey: C.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
     const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Fout'); return j;
   }
   const flash = (t, k = 'ok') => { const m = $('#amsg'); m.textContent = t; m.className = 'amsg ' + k; m.hidden = false; clearTimeout(flash.t); flash.t = setTimeout(() => m.hidden = true, 5000); };
