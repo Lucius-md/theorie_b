@@ -630,3 +630,6 @@ body.landing{background:var(--bg)}
 .adt th{background:var(--bg2);font-size:13px}
 .okt{color:var(--ok)}.not{color:var(--soft)}
 @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}.adform .grid{grid-template-columns:1fr}}
+.switch{margin:4px 0 0;text-align:center;font-size:14px}
+.linkbtn.big{font-size:15px;font-weight:800}
+.atabs button{font-size:15px}

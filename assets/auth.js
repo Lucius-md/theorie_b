@@ -22,14 +22,14 @@
   }
   const nlErr = m => {
     m = String(m);
-    if (/invalid login|invalid_grant|Invalid login credentials/i.test(m)) return 'E-mail of wachtwoord klopt niet.';
+    if (/invalid login|invalid_grant|Invalid login credentials/i.test(m)) return 'E-mail of wachtwoord klopt niet. Nog geen account? Klik op “Account maken”. · الإيميل أو كلمة السر غلط. إذا ما عندك حساب، اضغط «Account maken».';
     if (/already registered|already exists/i.test(m)) return 'Er bestaat al een account met dit e-mailadres. Log in.';
     if (/email not confirmed/i.test(m)) return 'Bevestig eerst je e-mailadres via de link in je mail.';
     if (/password.*(6|characters|short)/i.test(m)) return 'Je wachtwoord moet minstens 8 tekens hebben.';
     if (/rate limit|too many/i.test(m)) return 'Te veel pogingen. Wacht even en probeer het opnieuw.';
     return m;
   };
-  const setSession = j => { S = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + (j.expires_in || 3600) * 1000, user: { id: j.user.id, email: j.user.email } }; keep(); };
+  const setSession = j => { try { localStorage.setItem('tb-known', '1'); } catch {} S = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + (j.expires_in || 3600) * 1000, user: { id: j.user.id, email: j.user.email } }; keep(); };
   async function token() {
     if (!S) return null;
     if (Date.now() > S.expires_at - 60000) {
@@ -75,8 +75,10 @@
         <label><span class="lt"><span>Kortingscode <small>(niet verplicht)</small></span><span lang="ar" dir="rtl">كود الخصم (اختياري)</span></span><input type="text" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>` : ''}
         <button class="btn" type="submit">${su ? 'Account maken' : 'Inloggen'}</button>
         ${su ? '' : '<button class="linkbtn" type="button" id="forgot">Wachtwoord vergeten? <span lang="ar">· نسيت كلمة السر؟</span></button>'}
+        <p class="switch">${su ? 'Heb je al een account? <button class="linkbtn" type="button" data-m="login">Inloggen · دخول</button>' : 'Nog geen account? <button class="linkbtn big" type="button" data-m="signup">Maak een account · اعمل حساب جديد</button>'}</p>
       </form><p id="amsg" class="amsg" role="status" aria-live="polite" hidden></p>`;
     box().querySelectorAll('[data-m]').forEach(b => b.onclick = () => viewLogin(b.dataset.m));
+    if (!su) { const cf = document.createElement('p'); cf.className = 'small'; cf.innerHTML = 'Heb je een kortingscode? Maak eerst een account, daar vul je hem in. · <span lang="ar" dir="rtl">عندك كود؟ اعمل حساب وحطّه هناك.</span>'; $('#aform').appendChild(cf); }
     const f = $('#aform');
     f.onsubmit = async e => {
       e.preventDefault(); const d = Object.fromEntries(new FormData(f)); const b = f.querySelector('[type=submit]');
@@ -221,7 +223,7 @@
 
   async function start() {
     if (!configured) { box().innerHTML = '<p class="amsg no">De website is nog niet gekoppeld aan de database. Vul assets/config.js in (zie SETUP.md).</p>'; return; }
-    if (!(await token())) return viewLogin(new URLSearchParams(location.search).get('m') === 'signup' ? 'signup' : 'login');
+    if (!(await token())) { const m = new URLSearchParams(location.search).get('m'); return viewLogin(m || (localStorage.getItem('tb-known') ? 'login' : 'signup')); }
     if (recovery) return viewNewPassword();
     box().innerHTML = '<p class="amsg">Even geduld… · لحظة…</p>';
     try {
