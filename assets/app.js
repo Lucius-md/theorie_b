@@ -11,7 +11,7 @@ const labelCells=root=>{for(const c of (root||document).querySelectorAll('.stack
 /* ---------- state ---------- */
 const norm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[ً-ٰٟـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ');
 
-const KEY='tb-v2';
+const KEY=window.TB_KEY||'tb-v2';const EXKEY=KEY+':exam';
 let P={read:{},solved:{},known:{},ar:true,fav:{},quiz:{},sim:{},exams:[]};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==='object'&&!Array.isArray(s))P=Object.assign(P,s)}catch(e){}
 /* validate stored state: only plain objects with safe keys and boolean/number values survive */
@@ -20,7 +20,7 @@ const SAFE=/^[\w:.\-]{1,80}$/;const clean=(o,deep)=>{const r={};if(!o||typeof o!
 P.exams=Array.isArray(P.exams)?P.exams.filter(x=>x&&Number.isFinite(+x.s)).map(x=>({s:Math.max(0,Math.min(50,+x.s|0)),d:+x.d||0})).slice(-50):[];
 if(P.lastExam&&!(Array.isArray(P.lastExam.ids)&&P.lastExam.ids.every(i=>typeof i==='string'&&SAFE.test(i))))delete P.lastExam;
 if(P.lastExam)P.lastExam.ans=clean(P.lastExam.ans);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}renderProgress()};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}if(window.TB_SYNC)window.TB_SYNC(P);renderProgress()};
 
 /* ---------- toast + confetti ---------- */
 let tT;function toast(ok,nl,ar){const t=$('#toast');t.className='toast show '+(ok===false?'no':'ok');
@@ -253,8 +253,8 @@ $$('.mist').forEach(el=>{const m=MIST.find(x=>x.id===el.dataset.m);const S=build
  const intro=()=>{const sv=loadE();if(sv&&sv.end<=Date.now()&&!E){E=sv;return finish()}const best=P.exams.length?Math.max(...P.exams.map(x=>+x.s||0)):null;clearInterval(tm);
   box.innerHTML=`<div class="examintro card"><div class="ebig">${ico('examen')}</div><div><h3 style="margin-top:0">Klaar voor een proefexamen?</h3><p>50 vragen · 30 minuten · slagen bij 44 goed. Je ziet pas aan het eind wat goed en fout was, net als bij het CBR.</p><p lang="ar" dir="rtl" class="arinline">50 سؤال · 30 دقيقة · النجاح بـ 44 صح. النتيجة بالآخر متل الـ CBR.</p>${best!==null?`<p><b>Beste score:</b> ${best}/50 · ${P.exams.length}× gemaakt</p>`:''}<div class="btnrow">${loadE()?`<button class="btn" id="exRes">${ico('play')} Verder met je examen</button>`:''}<button class="btn${loadE()?' ghost':''}" id="exStart">${ico('play')} Start nieuw proefexamen</button>${P.lastExam?`<button class="btn ghost" id="exLast">${ico('check')} Laatste uitslag bekijken</button>`:''}</div></div></div>${P.exams.length?`<h3>Je resultaten</h3><div class="chart">${P.exams.slice(-8).map((x,k)=>`<div class="crow"><span class="cl">#${P.exams.length-Math.min(8,P.exams.length)+k+1}</span><div class="cbar"><i class="${x.s>=44?'g':'r'}" style="--w:${x.s/50*100}%"></i><b class="mark" style="left:88%"></b></div><span class="cv">${x.s}/50</span></div>`).join('')}</div>`:''}`;
   $('#exStart').onclick=start;const rb=$('#exRes');if(rb)rb.onclick=resume;const lb=$('#exLast');if(lb)lb.onclick=()=>{const L=P.lastExam;const q=L.ids.map(id=>ALLQ.find(x=>x.id===id)).filter(Boolean);E={q,i:0,ans:L.ans||{},end:0};finish(true)}};
- const NQ=50;const saveE=()=>{try{E?localStorage.setItem('tb-exam',JSON.stringify({ids:E.q.map(q=>q.id),i:E.i,ans:E.ans,end:E.end})):localStorage.removeItem('tb-exam')}catch(_){}};
- const loadE=()=>{try{const o=JSON.parse(localStorage.getItem('tb-exam')||'null');if(!o||!Array.isArray(o.ids))return null;const q=o.ids.map(id=>ALLQ.find(x=>x.id===id)).filter(Boolean);if(!q.length)return null;const ans={};for(const k in (o.ans||{}))if(typeof o.ans[k]==='number')ans[k]=o.ans[k];return{q,i:Math.min(+o.i||0,q.length-1),ans,end:+o.end||0}}catch(_){return null}};
+ const NQ=50;const saveE=()=>{try{E?localStorage.setItem(EXKEY,JSON.stringify({ids:E.q.map(q=>q.id),i:E.i,ans:E.ans,end:E.end})):localStorage.removeItem(EXKEY)}catch(_){}};
+ const loadE=()=>{try{const o=JSON.parse(localStorage.getItem(EXKEY)||'null');if(!o||!Array.isArray(o.ids))return null;const q=o.ids.map(id=>ALLQ.find(x=>x.id===id)).filter(Boolean);if(!q.length)return null;const ans={};for(const k in (o.ans||{}))if(typeof o.ans[k]==='number')ans[k]=o.ans[k];return{q,i:Math.min(+o.i||0,q.length-1),ans,end:+o.end||0}}catch(_){return null}};
  const pick=()=>{const by={};[...ALLQ].sort(()=>Math.random()-.5).forEach(q=>(by[q.t]=by[q.t]||[]).push(q));const ts=Object.keys(by).sort(()=>Math.random()-.5);const out=[];while(out.length<Math.min(NQ,ALLQ.length)){let any=false;for(const t of ts){if(by[t].length&&out.length<NQ){out.push(by[t].pop());any=true}}if(!any)break}out.forEach(q=>qOrd(q,true));return out.sort(()=>Math.random()-.5)};
  const start=()=>{E={q:pick(),i:0,ans:{},end:Date.now()+30*60*1000};saveE();document.body.classList.add('inexam');render();clearInterval(tm);tm=setInterval(tickT,1000)};
  const resume=()=>{E=loadE();if(!E)return intro();if(E.end<=Date.now())return finish();document.body.classList.add('inexam');render();clearInterval(tm);tm=setInterval(tickT,1000)};
