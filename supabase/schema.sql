@@ -1,5 +1,5 @@
 -- Theorie B: accounts, abonnement, kortingscodes en voortgang per gebruiker.
--- Plak dit één keer in Supabase → SQL Editor → Run.
+-- Is al toegepast op het project 'theoriesaid'. Alleen nodig bij een nieuw project: Supabase → SQL Editor → Run.
 
 -- 1. Abonnement per gebruiker (alleen de server mag dit veranderen)
 create table if not exists public.subscriptions (
@@ -107,8 +107,7 @@ begin
   insert into code_uses(code, user_id) values (upper(trim(p_code)), p_user);
   return true;
 exception when unique_violation then
-  update codes set uses = uses - 1 where code = upper(trim(p_code));
-  return false;
+  return false;  -- the block is rolled back, so the count above is undone too
 end $$;
 
 revoke all on function public.extend_subscription(uuid,int) from public, anon, authenticated;
@@ -118,8 +117,4 @@ grant execute on function public.extend_subscription(uuid,int) to service_role;
 grant execute on function public.check_code(uuid,text)        to service_role;
 grant execute on function public.use_code(uuid,text)          to service_role;
 
--- 6. Voorbeeldcodes (pas aan of verwijder). Codes worden altijd in HOOFDLETTERS opgeslagen.
-insert into codes(code, kind, percent, days, max_uses, note) values
-  ('GRATIS2026', 'free',    100, 365, 50,   'Gratis jaar, max 50 keer'),
-  ('HALF',       'percent', 50,  365, null, '50% korting')
-on conflict (code) do nothing;
+-- 6. Codes maak je in het beheerpaneel (/admin). Zet hier geen codes neer: dit bestand is openbaar.
