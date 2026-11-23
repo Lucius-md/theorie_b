@@ -18,6 +18,8 @@ const mats = {};               // shared materials
 let envTex = null;
 
 /* ---------- shared materials ---------- */
+const MOB = Math.min(innerWidth, innerHeight) < 700;
+const TEXW = MOB ? 1024 : 2048;
 function M(key, make) { return mats[key] || (mats[key] = make()); }
 const paint = c => M('paint' + c, () => new THREE.MeshPhysicalMaterial({ color: c, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.08 }));
 const glass = () => M('glass', () => new THREE.MeshPhysicalMaterial({ color: 0x0d1620, metalness: 0.2, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6 }));
@@ -245,7 +247,7 @@ async function groundTexture(S, markup) {
   const H = S.H;
   const routes = '';
   const marker = '';
-  const src = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 ${H}" width="2048" height="${Math.round(2048 * H / 320)}">${defs ? realDefs(defs) : ''}${markup}<g opacity=".9">${routes}</g>${marker}</svg>`;
+  const src = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 ${H}" width="${TEXW}" height="${Math.round(TEXW * H / 320)}">${defs ? realDefs(defs) : ''}${markup}<g opacity=".9">${routes}</g>${marker}</svg>`;
   const img = new Image();
   const url = URL.createObjectURL(new Blob([src], { type: 'image/svg+xml' }));
   await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
@@ -287,7 +289,7 @@ class View3D {
     scene.add(new THREE.HemisphereLight(0xeaf4ff, 0x5e7a45, 1.15));
     const sun = this.sun = new THREE.DirectionalLight(0xfff3df, 2.6);
     sun.position.set(-160, 340, 220); sun.target.position.set(160, 0, H / 2);
-    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+    sun.castShadow = true; sun.shadow.mapSize.set(MOB ? 1024 : 2048, MOB ? 1024 : 2048);
     const sc = sun.shadow.camera; sc.left = -260; sc.right = 260; sc.top = 260; sc.bottom = -260; sc.near = 50; sc.far = 900;
     sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.4; sun.shadow.radius = 4;
     scene.add(sun, sun.target);
@@ -299,6 +301,7 @@ class View3D {
     doc.querySelectorAll('.post,.tlight').forEach(n => n.remove());
     const markup = new XMLSerializer().serializeToString(doc.documentElement).replace(/^<svg[^>]*>|<\/svg>$/g, '');
     const { tex, canvas } = await groundTexture(S, markup);
+    if (!this.alive) return;
     if (!this.alive) return;
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(320, H), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.93 }));
     ground.rotation.x = -Math.PI / 2; ground.position.set(160, 0, H / 2); ground.receiveShadow = true; scene.add(ground);
@@ -384,7 +387,7 @@ class View3D {
 
     // overlays: order badges in HTML on top of the canvas
     this.badgeEls = S.d.a.map((a, i) => { if (!a.b) return null; const b = document.createElement('span'); b.className = 'r3badge'; b.textContent = a.o; this.wrap.appendChild(b); return b; });
-    const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'r3home'; reset.title = 'Terug naar beginbeeld'; reset.innerHTML = '⟲'; reset.onclick = () => this.home(true); this.wrap.appendChild(reset);
+    const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'r3home'; reset.title = 'Terug naar beginbeeld'; reset.setAttribute('aria-label', 'Terug naar beginbeeld'); reset.innerHTML = '⟲'; reset.onclick = () => this.home(true); this.wrap.appendChild(reset);
     const wm = document.createElement('span'); wm.className = 'wm'; wm.textContent = 'said'; wm.setAttribute('aria-hidden', 'true'); this.wrap.appendChild(wm);
     const hint = document.createElement('span'); hint.className = 'r3hint'; hint.textContent = 'Sleep om te draaien · اسحب لتلفّ'; this.wrap.appendChild(hint);
     setTimeout(() => hint.classList.add('gone'), 3500);
@@ -482,8 +485,10 @@ class View3D {
     c.parts.forEach(m => { const v = m.userData.v; if (m.position.y > 0.3) { v.y -= 98 * dt; m.position.addScaledVector(v, dt); m.rotation.x += m.userData.r.x * dt; m.rotation.z += m.userData.r.z * dt; if (m.position.y < 0.3) { m.position.y = 0.3; v.multiplyScalar(0.2); } } });
     const age = (now - c.t) / 1000; c.dust.scale.setScalar(1 + age * 3.2); c.dust.material.opacity = Math.max(0, 0.45 - age * 0.3);
   }
+  wake() { if (this.sleeping && this.alive) { this.sleeping = false; this.dirty = true; requestAnimationFrame(this.loop); } }
   loop(now) {
     if (!this.alive) return;
+    if (!this.visible || document.hidden) { this.sleeping = true; return; }
     const animate = this.sync(now);
     this.controls.update();
     // billboards: signs and lights always face the camera (around the vertical axis)
@@ -519,10 +524,11 @@ function start(S) {
 
 const io = new IntersectionObserver(es => es.forEach(e => {
   const S = e.target.__scene; if (!S) return;
-  if (S.view3d) S.view3d.visible = e.isIntersecting;
+  if (S.view3d) { S.view3d.visible = e.isIntersecting; if (e.isIntersecting) S.view3d.wake(); }
   if (e.isIntersecting) start(S);
 }), { rootMargin: '200px 0px' });
 
+document.addEventListener('visibilitychange', () => { if (!document.hidden) live.forEach(v => v.wake()); });
 export function attach(S) {
   S.stage.__scene = S;
   io.observe(S.stage);

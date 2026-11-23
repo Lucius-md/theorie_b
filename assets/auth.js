@@ -30,11 +30,18 @@
     return m;
   };
   const setSession = j => { try { localStorage.setItem('tb-known', '1'); } catch {} S = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + (j.expires_in || 3600) * 1000, user: { id: j.user.id, email: j.user.email } }; keep(); };
+  let refreshing = null;
   async function token() {
     if (!S) return null;
     if (Date.now() > S.expires_at - 60000) {
-      try { setSession(await auth('token?grant_type=refresh_token', { refresh_token: S.refresh_token })); }
-      catch { S = null; keep(); return null; }
+      refreshing = refreshing || (async () => {
+        const r = await fetch(C.SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: C.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: S.refresh_token }) });
+        if (r.ok) { setSession(await r.json()); return; }
+        if (r.status === 400 || r.status === 401 || r.status === 403) { S = null; keep(); return; }
+        throw new Error('Geen verbinding. Probeer het zo opnieuw.');
+      })().finally(() => { refreshing = null; });
+      await refreshing; // network errors are thrown, the session stays
+      if (!S) return null;
     }
     return S.access_token;
   }
@@ -225,7 +232,8 @@
     window.ALLQ = Object.entries(app.questions).flatMap(([tp, l]) => l.map((x, i) => Object.assign({ id: tp + '-' + i, t: tp }, x)));
     document.body.classList.remove('landing');
     document.body.innerHTML = app.html;
-    for (const s of ['assets/data.js', 'assets/scenes.js', 'assets/app.js']) await loadScript(s);
+    try { for (const s of ['assets/data.js', 'assets/scenes.js', 'assets/app.js']) await loadScript(s); }
+    catch (e) { document.body.innerHTML = '<main class="lp" style="padding:40px 20px;text-align:center"><p class="amsg no">De lessen konden niet laden. Controleer je internet. · <span lang="ar" dir="rtl">ما قدرنا نحمّل الدروس. تأكد من الإنترنت.</span></p><button class="btn" onclick="location.reload()">Opnieuw proberen · <span lang="ar" dir="rtl">جرّب كمان مرة</span></button></main>'; return; }
     // account button in the header
     const tools = document.querySelector('header.top');
     if (tools) {

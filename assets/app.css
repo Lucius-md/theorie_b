@@ -668,3 +668,10 @@ body.no-ar .opt .oar{display:none}
 /* watermark "said" also on sign cards, flashcards and landing signs */
 .sign::after,.flash .face::after,.lp-signs::after{content:"said";position:absolute;right:10px;bottom:6px;font:800 italic 13px/1 Overpass,Arial,sans-serif;letter-spacing:.04em;color:#0b111a40;pointer-events:none}
 .flash .face,.lp-signs{position:relative}
+/* mobile: no iOS zoom on inputs, bigger tap targets */
+#authbox input,.codeform input,.adm input,.adm select{font-size:16px}
+.pdot{min-width:40px;min-height:40px}
+.linkbtn{min-height:44px;padding:8px 4px}
+.r3home{min-width:44px;min-height:44px}
+input[type=range]{min-height:44px}
+@media(max-width:400px){.lp-top .btn.sm{font-size:.8rem;padding:8px 10px}.lp-top .brand small{display:none}}
