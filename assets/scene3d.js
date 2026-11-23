@@ -21,7 +21,7 @@ let envTex = null;
 const MOB = Math.min(innerWidth, innerHeight) < 700;
 const TEXW = MOB ? 1024 : 2048;
 function M(key, make) { return mats[key] || (mats[key] = make()); }
-const paint = c => M('paint' + c, () => new THREE.MeshPhysicalMaterial({ color: c, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.08 }));
+const paint = c => M('paint' + c, () => new THREE.MeshPhysicalMaterial({ color: c, metalness: 0.08, roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.06 }));
 const glass = () => M('glass', () => new THREE.MeshPhysicalMaterial({ color: 0x0d1620, metalness: 0.2, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6 }));
 const chrome = () => M('chrome', () => new THREE.MeshStandardMaterial({ color: 0xd9dde2, metalness: 1, roughness: 0.18 }));
 const rubber = () => M('rubber', () => new THREE.MeshStandardMaterial({ color: 0x141518, roughness: 0.92 }));
@@ -192,16 +192,17 @@ function cyclist() {
   const wheelB = z => { const w = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.32, 8, 28), rubber()); w.rotation.y = Math.PI / 2; w.position.set(0, 3.7, z); w.castShadow = true; return w; };
   g.add(wheelB(-5.6), wheelB(5.6));
   const tube = (a, b) => { const v = new THREE.Vector3().subVectors(b, a); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, v.length(), 8), frameM); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().normalize()); m.castShadow = true; return m; };
-  const P = (y, z) => new THREE.Vector3(0, y, z);
+  const P = (y, z) => new THREE.Vector3(0, y, -z);
   [[P(3.7, 5.6), P(8.6, 3.4)], [P(8.6, 3.4), P(8.9, -1.6)], [P(8.9, -1.6), P(4.2, 0)], [P(4.2, 0), P(8.6, 3.4)], [P(4.2, 0), P(3.7, -5.6)], [P(8.9, -1.6), P(3.7, -5.6)], [P(8.6, 3.4), P(10.6, 3.0)]]
     .forEach(([a, b]) => g.add(tube(a, b)));
-  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 5, 8), darkTrim()); bar.rotation.z = Math.PI / 2; bar.position.set(0, 10.6, 3.0); g.add(bar);
-  const saddle = new THREE.Mesh(new RoundedBoxGeometry(1.4, 0.6, 2.8, 2, 0.3), darkTrim()); saddle.position.set(0, 9.4, -1.8); g.add(saddle);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 5, 8), darkTrim()); bar.rotation.z = Math.PI / 2; bar.position.set(0, 10.6, -3.0); g.add(bar);
+  const saddle = new THREE.Mesh(new RoundedBoxGeometry(1.4, 0.6, 2.8, 2, 0.3), darkTrim()); saddle.position.set(0, 9.4, 1.8); g.add(saddle);
   // rider (seated, leaning forward)
   const r = person({ top: 0xe5533d, bottom: 0x2a3140, hair: 0x3b2a1e });
   const w = r.g.userData.walk;
-  r.g.position.set(0, 1.6, -2.2); r.g.rotation.x = 0.32;
-  w.armL.rotation.x = w.armR.rotation.x = -1.05; w.armL.position.z = w.armR.position.z = -0.4;
+  r.g.position.set(0, 1.6, 2.2); r.g.rotation.x = -0.32;
+  w.armL.rotation.x = w.armR.rotation.x = 1.05; w.armL.position.z = w.armR.position.z = 0.4;
+  w.legL.rotation.x = 0.9; w.legR.rotation.x = 0.5; g.userData.seated = true;
   g.add(r.g);
   g.userData.pedal = w;
   return { g };
@@ -228,7 +229,7 @@ function noiseURL(kind) {
   const base = kind === 'asph' ? [52, 56, 61] : kind === 'grass' ? [118, 168, 82] : kind === 'bike' ? [178, 78, 64] : [196, 199, 204];
   const amp = kind === 'asph' || kind === 'bike' ? 22 : kind === 'grass' ? 30 : 10;
   for (let i = 0; i < d.length; i += 4) {
-    const n = (Math.random() - 0.5) * amp, big = kind === 'grass' ? Math.sin(i * 0.00031) * 8 : 0;
+    const n = (Math.random() - 0.5) * amp, big = 0;
     const speck = (kind === 'asph' || kind === 'bike') && Math.random() < 0.035 ? 26 : 0;
     d[i] = base[0] + n + big + speck; d[i + 1] = base[1] + n + big * 1.2 + speck; d[i + 2] = base[2] + n * 0.8 + speck; d[i + 3] = 255;
   }
@@ -441,6 +442,7 @@ class View3D {
         o.lamps.ind.L.emissiveIntensity = L && blink ? 3 : 0; o.lamps.ind.R.emissiveIntensity = R && blink ? 3 : 0;
         if (o.lamps.blue) o.lamps.blue.emissiveIntensity = blink ? 4 : 0.4;
       }
+      const pd = o.g.userData.pedal; if (pd) { const ph = (o.dist = (o.dist || 0) + v) * 0.35; pd.legL.rotation.x = 0.7 + Math.sin(ph) * 0.35; pd.legR.rotation.x = 0.7 - Math.sin(ph) * 0.35; }
       const w = o.g.userData.walk; if (w) { const ph = (o.dist = (o.dist || 0) + v) * 0.45; const a = v > 0.001 || S.svg.classList.contains('moving') ? Math.sin(ph) * 0.55 : 0; w.legL.rotation.x = a; w.legR.rotation.x = -a; w.armL.rotation.x = -a * 0.8; w.armR.rotation.x = a * 0.8; }
       if (o.g.userData.roll) o.g.userData.roll.rotation.x += v * 0.33;
       if (o.halo) o.halo.material.opacity = 0.45 + 0.3 * Math.sin(now / 400);
