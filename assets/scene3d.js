@@ -280,7 +280,7 @@ class View3D {
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
     r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.outputColorSpace = THREE.SRGBColorSpace;
-    this.wrap.appendChild(r.domElement);
+    this.wrap.appendChild(r.domElement); r.domElement.setAttribute('role', 'img'); r.domElement.setAttribute('aria-label', '3D-weergave. ' + (S.opt && S.opt.label || S.svg.getAttribute('aria-label') || 'Verkeerssituatie') + ' Sleep om te draaien.');
     const scene = this.scene = new THREE.Scene();
     scene.background = new THREE.Color(0xcfe3f2);
     scene.fog = new THREE.Fog(0xcfe3f2, 900, 1900);

@@ -109,7 +109,7 @@
       <div class="atabs" role="tablist"><button role="tab" aria-selected="${!su}" data-m="login">Inloggen · <span lang="ar">دخول</span></button><button role="tab" aria-selected="${su}" data-m="signup">Account maken · <span lang="ar">حساب جديد</span></button></div>
       <form id="aform" novalidate>
         <label><span class="lt"><span>E-mailadres</span><span lang="ar" dir="rtl">الإيميل</span></span><input type="email" name="email" autocomplete="email" required></label>
-        <label><span class="lt"><span>Wachtwoord</span><span lang="ar" dir="rtl">كلمة السر</span></span><input type="password" name="password" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required></label>
+        <label><span class="lt"><span>Wachtwoord</span><span lang="ar" dir="rtl">كلمة السر</span></span><input type="password" name="password" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required>${su ? '<small class="hint">Minstens 8 tekens · <span lang="ar" dir="rtl">8 أحرف على الأقل</span></small>' : ''}</label>
         ${su ? `<label><span class="lt"><span>Herhaal wachtwoord</span><span lang="ar" dir="rtl">عيد كلمة السر</span></span><input type="password" name="password2" autocomplete="new-password" minlength="8" required></label>
         <label><span class="lt"><span>Kortingscode <small>(niet verplicht)</small></span><span lang="ar" dir="rtl">كود الخصم (اختياري)</span></span><input type="text" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>` : ''}
         <button class="btn" type="submit">${su ? 'Account maken' : 'Inloggen'}</button>
@@ -122,9 +122,11 @@
     f.onsubmit = async e => {
       e.preventDefault(); const d = Object.fromEntries(new FormData(f)); const b = f.querySelector('[type=submit]');
       const email = String(d.email || '').trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg('Vul een geldig e-mailadres in.', 'no');
-      if (String(d.password || '').length < 8) return msg('Je wachtwoord moet minstens 8 tekens hebben.', 'no');
-      if (su && d.password !== d.password2) return msg('De wachtwoorden zijn niet hetzelfde.', 'no');
+      const bad = (name, t) => { const el = f.elements[name]; if (el) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', 'amsg'); el.focus(); } msg(t, 'no'); };
+      f.querySelectorAll('[aria-invalid]').forEach(x => x.removeAttribute('aria-invalid'));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('email', 'Vul een geldig e-mailadres in.');
+      if (String(d.password || '').length < 8) return bad('password', 'Je wachtwoord moet minstens 8 tekens hebben.');
+      if (su && d.password !== d.password2) return bad('password2', 'De wachtwoorden zijn niet hetzelfde.');
       busy(b, true); msg('');
       try {
         if (su) {
