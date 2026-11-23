@@ -665,3 +665,6 @@ body.no-ar .opt .oar{display:none}
 .adm .scrollhint{display:none;font-size:.85rem;color:var(--soft);margin:8px 0 4px}
 @media (max-width:700px){.adm .adtabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.adm .adtabs button{width:100%}.adm .scrollhint{display:block}}
 .agree{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;margin:10px 0;text-align:start}.agree input{width:20px;height:20px;flex:none;margin-top:2px}.agree span[lang=ar]{display:block}
+/* watermark "said" also on sign cards, flashcards and landing signs */
+.sign::after,.flash .face::after,.lp-signs::after{content:"said";position:absolute;right:10px;bottom:6px;font:800 italic 13px/1 Overpass,Arial,sans-serif;letter-spacing:.04em;color:#0b111a40;pointer-events:none}
+.flash .face,.lp-signs{position:relative}
