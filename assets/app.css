@@ -538,7 +538,7 @@ svg:not(.playing):not(.moving) .act.turnR .ir,svg:not(.playing):not(.moving) .ac
 .skip{position:absolute;left:-9999px;top:8px;z-index:100;background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:800}
 .skip:focus{left:12px}
 .haz .hopts{margin-top:12px}
-.stage.frozen::after{content:"⏸ Wat doe je?";position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#0b111acc;color:#fff;font:800 14px/1 Overpass,Arial,sans-serif;padding:8px 14px;border-radius:999px}
+.stage.frozen::before{content:"⏸ Wat doe je? · شو بتعمل؟";white-space:nowrap;font-size:13px!important;position:absolute;z-index:4;pointer-events:none;right:auto;bottom:auto;left:50%;top:12px;transform:translateX(-50%);background:#0b111acc;color:#fff;font:800 14px/1 Overpass,Arial,sans-serif;padding:8px 14px;border-radius:999px}
 .stage{position:relative}
 [dir=rtl]{unicode-bidi:isolate}
 @media(max-width:640px){.toast{bottom:max(84px,env(safe-area-inset-bottom))}}
@@ -656,3 +656,12 @@ body.landing{background:var(--bg)}
 .vrow{display:grid;grid-template-columns:1fr;gap:6px;margin:12px 0;font-weight:700}
 .vrow select{font:500 15px inherit;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;max-width:100%}
 .vrow .btn{justify-self:start}
+.opt .otx{display:flex;flex-direction:column;gap:2px;text-align:start}
+.opt .oar{font-size:.86em;color:var(--soft);font-weight:500;text-align:right}
+body.no-ar .opt .oar{display:none}
+.amsg .amar{display:block;margin-top:4px;font-size:.92em}
+.adm .chip.warn{border-color:#d97706;color:#b45309}
+.adm td.acts{display:flex;gap:6px;flex-wrap:wrap;min-width:260px}
+.adm .scrollhint{display:none;font-size:.85rem;color:var(--soft);margin:8px 0 4px}
+@media (max-width:700px){.adm .adtabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.adm .adtabs button{width:100%}.adm .scrollhint{display:block}}
+.agree{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;margin:10px 0;text-align:start}.agree input{width:20px;height:20px;flex:none;margin-top:2px}.agree span[lang=ar]{display:block}

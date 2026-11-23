@@ -7,7 +7,7 @@ const LEGACY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const SITE = (Deno.env.get('SITE_URL') || 'https://theoriesaid.site').replace(/\/$/, '');
 const PRICE = Number(Deno.env.get('PRICE_EUR') || '10');
 const DAYS = 365;
-const ORIGINS = [SITE, 'https://www.theoriesaid.site', 'https://theorieb.vercel.app', 'http://localhost:8765', 'http://localhost:8766'];
+const ORIGINS = [SITE, 'https://www.theoriesaid.site', 'https://theorieb.vercel.app'];
 
 const adminHeaders = (): Record<string, string> => SECRET ? { apikey: SECRET } : { apikey: LEGACY!, Authorization: 'Bearer ' + LEGACY };
 class HttpError extends Error { constructor(public status: number, msg: string) { super(msg); } }
@@ -66,7 +66,17 @@ async function grantForPayment(row: any) {
 }
 
 // Lesson content: built by tools/build.py into content.json in the GitHub repo, loaded once per instance.
-const CONTENT_URLS = (Deno.env.get('CONTENT_URLS') || 'https://raw.githubusercontent.com/Lucius-md/theorie_b/main/content.json,https://raw.githubusercontent.com/Lucius-md/theorie_b/abonnement/content.json').split(',');
+const CONTENT_URLS = (Deno.env.get('CONTENT_URLS') || 'https://raw.githubusercontent.com/Lucius-md/theorie_b/main/content.enc').split(',');
+// content.enc is AES-256-GCM (iv 12 bytes + ciphertext+tag, base64); the key is in table app_secrets.
+let KEY: CryptoKey | null = null;
+async function decrypt(b64: string) {
+  if (!KEY) { const [row] = await sb('/rest/v1/app_secrets?select=value&name=eq.content_key'); if (!row) fail(500, 'content key missing');
+    const raw = new Uint8Array(row.value.match(/../g).map((h: string) => parseInt(h, 16)));
+    KEY = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); }
+  const bin = Uint8Array.from(atob(b64.trim()), c => c.charCodeAt(0));
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bin.slice(0, 12) }, KEY, bin.slice(12));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
 let CONTENT: { html: string; questions: unknown; qt: unknown } | null = null, CONTENT_AT = 0;
 async function content() {
   if (CONTENT && Date.now() - CONTENT_AT < 10 * 60 * 1000) return CONTENT;
@@ -74,16 +84,16 @@ async function content() {
   for (const u of CONTENT_URLS) {
     try {
       const r = await fetch(u.trim(), { headers: gh ? { Authorization: 'Bearer ' + gh } : {} });
-      if (r.ok) { CONTENT = await r.json(); CONTENT_AT = Date.now(); return CONTENT; }
+      if (r.ok) { CONTENT = await decrypt(await r.text()); CONTENT_AT = Date.now(); return CONTENT; }
     } catch (e) { console.error('content', u, e); }
   }
   if (CONTENT) return CONTENT;
   fail(503, 'Lessen konden niet geladen worden. Probeer het zo opnieuw.');
 }
 
-const ADMIN: Record<string, (b: any) => Promise<unknown>> = {
+const ADMIN: Record<string, (b: any, me?: User) => Promise<unknown>> = {
   async stats() {
-    const [users, subs, pays] = await Promise.all([allUsers(), sb('/rest/v1/subscriptions?select=paid_until'), sb('/rest/v1/payments?select=amount,created_at&processed=eq.true')]);
+    const [users, subs, pays] = await Promise.all([allUsers(), sb('/rest/v1/subscriptions?select=paid_until'), sb('/rest/v1/payments?select=amount,created_at&processed=eq.true&status=neq.refunded')]);
     const now = Date.now();
     return { users: users.length, active: subs.filter((s: any) => new Date(s.paid_until).getTime() > now).length,
       revenue: pays.reduce((a: number, p: any) => a + Number(p.amount), 0),
@@ -97,7 +107,7 @@ const ADMIN: Record<string, (b: any) => Promise<unknown>> = {
     const percent = kind === 'free' ? 100 : Math.min(99, Math.max(1, parseInt(b.percent, 10) || 0));
     const days = Math.min(3650, Math.max(1, parseInt(b.days, 10) || 365));
     const max_uses = b.max_uses ? Math.max(1, parseInt(b.max_uses, 10)) : null;
-    const expires_at = b.expires_at ? new Date(b.expires_at + 'T23:59:59').toISOString() : null;
+    const expires_at = b.expires_at ? (isNaN(Date.parse(b.expires_at)) ? fail(400, 'Ongeldige datum.') : new Date(b.expires_at).toISOString()) : null;
     const note = String(b.note || '').slice(0, 200) || null;
     if ((await sb('/rest/v1/codes?select=code&code=eq.' + encodeURIComponent(code))).length) fail(409, 'Deze code bestaat al.');
     await sb('/rest/v1/codes', { method: 'POST', body: JSON.stringify({ code, kind, percent, days, max_uses, expires_at, note }) });
@@ -114,8 +124,38 @@ const ADMIN: Record<string, (b: any) => Promise<unknown>> = {
   },
   async grant(b) { const u = await userByEmail(b.email); const days = Math.min(3650, Math.max(1, parseInt(b.days, 10) || 365)); return { ok: true, paid_until: await rpc('extend_subscription', { p_user: u.id, p_days: days }) }; },
   async revoke(b) { const u = await userByEmail(b.email); await sb('/rest/v1/subscriptions?user_id=eq.' + u.id, { method: 'PATCH', body: JSON.stringify({ paid_until: new Date(Date.now() - 1000).toISOString(), updated_at: new Date().toISOString() }) }); return { ok: true }; },
+  async codeUses(b) {
+    const c = String(b.code || '').toUpperCase(); if (!CODE_RE.test(c)) fail(400, 'Ongeldige code');
+    const [uses, users] = await Promise.all([sb('/rest/v1/code_uses?select=user_id,used_at&order=used_at.desc&code=eq.' + encodeURIComponent(c)), allUsers()]);
+    const em = Object.fromEntries(users.map(u => [u.id, u.email]));
+    return { uses: uses.map((x: any) => ({ email: em[x.user_id] || '?', used_at: x.used_at })) };
+  },
+  async resetPassword(b) {
+    const u = await userByEmail(b.email);
+    const r = await fetch(SB + '/auth/v1/recover?redirect_to=' + encodeURIComponent(SITE + '/'), { method: 'POST', headers: { apikey: SECRET || LEGACY!, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: u.email }) });
+    if (!r.ok) fail(502, 'Mail kon niet verstuurd worden (probeer later).');
+    return { ok: true };
+  },
+  async deleteUser(b) {
+    const u = await userByEmail(b.email);
+    if (await isAdmin(u)) fail(400, 'Een beheerder kun je hier niet verwijderen.');
+    await sb('/auth/v1/admin/users/' + u.id, { method: 'DELETE' });
+    return { ok: true };
+  },
+  async admins() { return { admins: await sb('/rest/v1/admins?select=email,created_at&order=created_at') }; },
+  async addAdmin(b) {
+    const e = String(b.email || '').trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) fail(400, 'Ongeldig e-mailadres.');
+    await sb('/rest/v1/admins', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates' }, body: JSON.stringify({ email: e }) });
+    return { ok: true };
+  },
+  async removeAdmin(b, me?: User) {
+    const e = String(b.email || '').trim().toLowerCase();
+    if (me && me.email.toLowerCase() === e) fail(400, 'Je kunt jezelf niet als beheerder verwijderen.');
+    await sb('/rest/v1/admins?email=eq.' + encodeURIComponent(e), { method: 'DELETE' });
+    return { ok: true };
+  },
   async payments() {
-    const [pays, users] = await Promise.all([sb('/rest/v1/payments?select=id,provider,user_id,amount,code,status,processed,created_at&order=created_at.desc&limit=100'), allUsers()]);
+    const [pays, users] = await Promise.all([sb('/rest/v1/payments?select=id,provider,method,user_id,amount,code,status,processed,created_at&order=created_at.desc&limit=500'), allUsers()]);
     const em = Object.fromEntries(users.map(u => [u.id, u.email]));
     return { payments: pays.map((p: any) => ({ ...p, email: em[p.user_id] || '?' })) };
   }
@@ -136,6 +176,10 @@ async function route(name: string, req: Request): Promise<unknown> {
     }
     case 'redeem': {
       const u = await getUser(req); const b = await req.json().catch(() => ({}));
+      const since = new Date(Date.now() - 3600e3).toISOString();
+      const tries = await sb('/rest/v1/redeem_attempts?select=at&user_id=eq.' + u.id + '&at=gte.' + since);
+      if (tries.length >= 10) fail(429, 'Te veel pogingen. Probeer het over een uur opnieuw. · محاولات كتير، جرّب بعد ساعة.');
+      await sb('/rest/v1/redeem_attempts', { method: 'POST', body: JSON.stringify({ user_id: u.id }) });
       const c = String(b.code || '').trim().toUpperCase();
       if (!CODE_RE.test(c)) fail(400, 'Ongeldige code.');
       const [chk] = await rpc('check_code', { p_user: u.id, p_code: c });
@@ -164,7 +208,7 @@ async function route(name: string, req: Request): Promise<unknown> {
       }
       const key = Deno.env.get('MOLLIE_API_KEY'); if (!key) fail(400, 'Online betalen is nog niet beschikbaar. Gebruik een kortingscode of probeer het later.');
       const r = await fetch('https://api.mollie.com/v2/payments', { method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: { currency: 'EUR', value }, description: `Theorie B – toegang ${DAYS} dagen`, redirectUrl: SITE + '/?paid=1', webhookUrl: SB + '/functions/v1/api/mollie-webhook', locale: 'nl_NL', metadata: { user_id: u.id, code } }) });
+        body: JSON.stringify({ amount: { currency: 'EUR', value }, description: `Theorie B – toegang ${DAYS} dagen`, redirectUrl: SITE + '/?paid=1', webhookUrl: SB + '/functions/v1/api/mollie-webhook', locale: 'nl_NL', billingEmail: u.email, metadata: { user_id: u.id, code } }) });
       const p = await r.json(); if (!r.ok) { console.error(p); fail(502, 'Betaling kon niet starten.'); }
       await sb('/rest/v1/payments', { method: 'POST', body: JSON.stringify({ id: p.id, provider: 'mollie', user_id: u.id, amount, code }) });
       return { url: p._links.checkout.href };
@@ -173,13 +217,19 @@ async function route(name: string, req: Request): Promise<unknown> {
       const form = await req.formData().catch(() => null); const id = String(form?.get('id') || '');
       if (!/^tr_[A-Za-z0-9]+$/.test(id)) return { ignored: true };
       const r = await fetch('https://api.mollie.com/v2/payments/' + id, { headers: { Authorization: 'Bearer ' + Deno.env.get('MOLLIE_API_KEY') } });
-      if (!r.ok) return { ignored: true };
+      if (!r.ok) fail(502, 'Mollie niet bereikbaar');
       const p = await r.json(); const [row] = await sb('/rest/v1/payments?select=*&id=eq.' + id);
       if (!row) return { ignored: true };
-      await sb('/rest/v1/payments?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ status: p.status }) });
+      const back = Number(p.amountRefunded?.value || 0) + Number(p.amountChargedBack?.value || 0);
+      if (row.processed && back > 0 && back + 0.001 >= Number(row.amount)) { await rpc('revoke_payment', { p_id: id }); return { ok: true, refunded: true }; }
+      if (row.status === 'refunded') return { ok: true };
+      await sb('/rest/v1/payments?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ status: p.status, method: p.method || null }) });
       if (p.status !== 'paid' || row.processed || Number(p.amount.value) + 0.001 < Number(row.amount)) return { ok: true };
       const claimed = await sb('/rest/v1/payments?id=eq.' + id + '&processed=eq.false', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ processed: true }) });
-      if (claimed?.length) await grantForPayment(row);
+      if (claimed?.length) {
+        try { await grantForPayment(row); }
+        catch (e) { await sb('/rest/v1/payments?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ processed: false }) }); throw e; }
+      }
       return { ok: true };
     }
     case 'btcpay-webhook': {
@@ -190,16 +240,18 @@ async function route(name: string, req: Request): Promise<unknown> {
       let diff = got.length ^ want.length; for (let i = 0; i < Math.min(got.length, want.length); i++) diff |= got.charCodeAt(i) ^ want.charCodeAt(i);
       if (diff) fail(401, 'bad signature');
       const ev = JSON.parse(new TextDecoder().decode(raw) || '{}');
-      if (ev.type !== 'InvoiceSettled' || !ev.invoiceId) return { ok: true };
+      if (!ev.invoiceId) return { ok: true };
+      if (ev.type === 'InvoiceExpired' || ev.type === 'InvoiceInvalid') { await sb('/rest/v1/payments?processed=eq.false&id=eq.' + encodeURIComponent(ev.invoiceId), { method: 'PATCH', body: JSON.stringify({ status: ev.type === 'InvoiceExpired' ? 'expired' : 'failed' }) }); return { ok: true }; }
+      if (ev.type !== 'InvoiceSettled') return { ok: true };
       const [row] = await sb('/rest/v1/payments?select=*&id=eq.' + encodeURIComponent(ev.invoiceId)); if (!row) return { ignored: true };
-      const claimed = await sb('/rest/v1/payments?id=eq.' + encodeURIComponent(ev.invoiceId) + '&processed=eq.false', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ processed: true, status: 'paid' }) });
-      if (claimed?.length) await grantForPayment(row);
+      const claimed = await sb('/rest/v1/payments?id=eq.' + encodeURIComponent(ev.invoiceId) + '&processed=eq.false', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ processed: true, status: 'paid', method: 'bitcoin' }) });
+      if (claimed?.length) { try { await grantForPayment(row); } catch (e) { await sb('/rest/v1/payments?id=eq.' + encodeURIComponent(ev.invoiceId), { method: 'PATCH', body: JSON.stringify({ processed: false }) }); throw e; } }
       return { ok: true };
     }
     case 'admin': {
       const u = await getUser(req); if (!(await isAdmin(u))) fail(403, 'Geen toegang');
       const b = await req.json().catch(() => ({})); const fn = ADMIN[b.action]; if (!fn) fail(400, 'Onbekende actie');
-      return await fn(b);
+      return await fn(b, u);
     }
   }
   fail(404, 'Niet gevonden');

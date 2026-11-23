@@ -61,20 +61,52 @@
 
   /* ---------- UI ---------- */
   const box = () => $('#authbox');
-  function msg(t, kind = '') { const m = $('#amsg'); if (m) { m.textContent = t; m.className = 'amsg ' + kind; m.hidden = !t; } }
+  const AR = [
+    [/^Vul een geldig e-mailadres/, 'اكتب إيميل صحيح.'],
+    [/minstens 8 tekens|^Minstens 8/, 'كلمة السر لازم تكون 8 أحرف على الأقل.'],
+    [/niet hetzelfde/, 'كلمتين السر مو متل بعض.'],
+    [/^Vul eerst je e-mailadres/, 'اكتب إيميلك أول.'],
+    [/^Als dit e-mailadres/, 'إذا الإيميل عنا، رح يوصلك رابط لتختار كلمة سر جديدة.'],
+    [/^Je wachtwoord is aangepast/, 'تغيّرت كلمة السر.'],
+    [/bestaat al een account/, 'في حساب بهالإيميل من قبل. سجّل دخول.'],
+    [/^Bevestig eerst/, 'أكّد إيميلك أول من الرابط اللي وصلك.'],
+    [/^Te veel pogingen/, 'محاولات كتير. استنى شوي وجرّب مرة تانية.'],
+    [/^De link werkt niet meer/, 'الرابط ما عاد يشتغل. اطلب واحد جديد.'],
+    [/^Gelukt! Je hebt gratis toegang/, 'تمام! صار عندك دخول ببلاش.'],
+    [/^Code geldt/, 'الكود شغّال: في خصم. ادفع المبلغ الجديد.'],
+    [/^Je kortingscode/, 'كود الخصم انحط. ادفع المبلغ الجديد.'],
+    [/^Lessen laden/, 'عم نحمّل الدروس…'],
+    [/^Betaling wordt gecontroleerd/, 'عم نتأكد من الدفع…'],
+    [/^Deze (kortings)?code werkt niet|^Ongeldige code/, 'هالكود ما بيشتغل.'],
+    [/gratis code/, 'هاد كود ببلاش: استعمل «تفعيل الكود».'],
+    [/betalen is nog niet beschikbaar|Bitcoin is nog niet/, 'الدفع أونلاين لسا مو جاهز. استعمل كود أو جرّب بعدين.'],
+    [/kon niet starten/, 'ما قدرنا نبلّش الدفع. جرّب كمان مرة.'],
+    [/Niet ingelogd|Sessie verlopen/, 'لازم تسجّل دخول من جديد.'],
+    [/Lessen konden niet geladen/, 'ما قدرنا نحمّل الدروس. جرّب بعد شوي.'],
+    [/Mail kon niet/, 'ما قدرنا نبعت الإيميل. جرّب بعدين.'],
+    [/Failed to fetch|NetworkError|Load failed/, 'في مشكلة بالإنترنت. تأكد من الاتصال وجرّب كمان مرة.'],
+    [/Account gemaakt|Kijk in je e-mail/, 'انعمل الحساب. شوف إيميلك وأكّد.']
+  ];
+  function msg(t, kind = '') {
+    const m = $('#amsg'); if (!m) return;
+    t = String(t || ''); const hasAr = /[\u0600-\u06FF]/.test(t);
+    const ar = hasAr ? '' : (AR.find(([r]) => r.test(t)) || [, kind === 'no' ? 'صار في خطأ. جرّب كمان مرة.' : ''])[1];
+    m.innerHTML = esc(t) + (ar ? `<span class="amar" lang="ar" dir="rtl">${esc(ar)}</span>` : '');
+    m.className = 'amsg ' + kind; m.hidden = !t;
+  }
   const busy = (b, on) => { if (!b) return; b.disabled = on; b.classList.toggle('loading', on); };
 
   function viewLogin(mode = 'login') {
     const su = mode === 'signup';
     box().innerHTML = `
-      <div class="atabs" role="tablist"><button role="tab" aria-selected="${!su}" data-m="login">Inloggen <span lang="ar">· دخول</span></button><button role="tab" aria-selected="${su}" data-m="signup">Account maken <span lang="ar">· حساب جديد</span></button></div>
+      <div class="atabs" role="tablist"><button role="tab" aria-selected="${!su}" data-m="login">Inloggen · <span lang="ar">دخول</span></button><button role="tab" aria-selected="${su}" data-m="signup">Account maken · <span lang="ar">حساب جديد</span></button></div>
       <form id="aform" novalidate>
         <label><span class="lt"><span>E-mailadres</span><span lang="ar" dir="rtl">الإيميل</span></span><input type="email" name="email" autocomplete="email" required></label>
         <label><span class="lt"><span>Wachtwoord</span><span lang="ar" dir="rtl">كلمة السر</span></span><input type="password" name="password" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required></label>
         ${su ? `<label><span class="lt"><span>Herhaal wachtwoord</span><span lang="ar" dir="rtl">عيد كلمة السر</span></span><input type="password" name="password2" autocomplete="new-password" minlength="8" required></label>
         <label><span class="lt"><span>Kortingscode <small>(niet verplicht)</small></span><span lang="ar" dir="rtl">كود الخصم (اختياري)</span></span><input type="text" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>` : ''}
         <button class="btn" type="submit">${su ? 'Account maken' : 'Inloggen'}</button>
-        ${su ? '' : '<button class="linkbtn" type="button" id="forgot">Wachtwoord vergeten? <span lang="ar">· نسيت كلمة السر؟</span></button>'}
+        ${su ? '' : '<button class="linkbtn" type="button" id="forgot">Wachtwoord vergeten? · <span lang="ar">نسيت كلمة السر؟</span></button>'}
         <p class="switch">${su ? 'Heb je al een account? <button class="linkbtn" type="button" data-m="login">Inloggen · دخول</button>' : 'Nog geen account? <button class="linkbtn big" type="button" data-m="signup">Maak een account · اعمل حساب جديد</button>'}</p>
       </form><p id="amsg" class="amsg" role="status" aria-live="polite" hidden></p>`;
     box().querySelectorAll('[data-m]').forEach(b => b.onclick = () => viewLogin(b.dataset.m));
@@ -90,9 +122,9 @@
       try {
         if (su) {
           if (d.code) localStorage.setItem(PEND, String(d.code).trim().toUpperCase());
-          const j = await auth('signup?redirect_to=' + encodeURIComponent(location.origin + '/'), { email, password: d.password });
+          const j = await auth('signup?redirect_to=' + encodeURIComponent(location.origin + '/'), { email, password: d.password, data: d.code ? { code: String(d.code).trim().toUpperCase() } : {} });
           if (j.access_token) { setSession(j); return start(); }
-          box().innerHTML = `<div class="adone"><h3>Check je e-mail</h3><p>We hebben een link gestuurd naar <b>${esc(email)}</b>. Klik op de link om je account te bevestigen.</p><div class="ar" lang="ar" dir="rtl">بعتنالك رابط عالإيميل. اضغط عليه لتأكّد حسابك.</div><button class="btn ghost" id="toLogin">Naar inloggen</button></div>`;
+          box().innerHTML = `<div class="adone"><h3>Kijk in je e-mail</h3><p>We hebben een link gestuurd naar <b>${esc(email)}</b>. Klik op de link om je account te bevestigen.</p><div class="ar" lang="ar" dir="rtl">بعتنالك رابط عالإيميل. اضغط عليه لتأكّد حسابك.</div><button class="btn ghost" id="toLogin">Naar inloggen</button></div>`;
           $('#toLogin').onclick = () => viewLogin('login');
         } else {
           setSession(await auth('token?grant_type=password', { email, password: d.password }));
@@ -110,7 +142,7 @@
   }
 
   function viewNewPassword() {
-    box().innerHTML = `<h3>Kies een nieuw wachtwoord <span lang="ar">· اختار كلمة سر جديدة</span></h3><form id="pform"><label>Nieuw wachtwoord<input type="password" name="p" minlength="8" autocomplete="new-password" required></label><label>Herhaal wachtwoord<input type="password" name="p2" minlength="8" autocomplete="new-password" required></label><button class="btn" type="submit">Opslaan</button></form><p id="amsg" class="amsg" role="status" hidden></p>`;
+    box().innerHTML = `<h3>Kies een nieuw wachtwoord · <span lang="ar">اختار كلمة سر جديدة</span></h3><form id="pform"><label>Nieuw wachtwoord<input type="password" name="p" minlength="8" autocomplete="new-password" required></label><label>Herhaal wachtwoord<input type="password" name="p2" minlength="8" autocomplete="new-password" required></label><button class="btn" type="submit">Opslaan</button></form><p id="amsg" class="amsg" role="status" hidden></p>`;
     $('#pform').onsubmit = async e => {
       e.preventDefault(); const f = e.target;
       if (f.p.value.length < 8) return msg('Minstens 8 tekens.', 'no');
@@ -128,8 +160,8 @@
       ${expired ? `<p class="amsg no">Je abonnement is verlopen op ${until.toLocaleDateString('nl-NL')}. Verleng het om verder te leren.</p>` : ''}
       <div class="paycard"><div class="price"><b>€${esc(C.PRICE || st.price)}</b><span>per jaar · 365 dagen toegang</span></div>
         <p class="ar" lang="ar" dir="rtl">اشتراك سنة كاملة بـ ${esc(C.PRICE || st.price)} يورو.</p>
-        ${st.payments === false ? '<p class="amsg">Online betalen komt binnenkort. Heb je een code? Vul hem hieronder in.</p>' : '<button class="btn" id="pay">Betalen met iDEAL, Apple Pay, kaart of overschrijving</button>'}
-        ${st.bitcoin ? '<button class="btn ghost" id="paybtc">Betalen met Bitcoin</button>' : ''}
+        ${st.payments === false ? '<p class="amsg">Online betalen komt binnenkort. Heb je een code? Vul hem hieronder in.</p>' : '<label class="agree"><input type="checkbox" id="agree"> <span>Ik wil direct toegang. Ik weet dat ik daarna geen herroepingsrecht (14 dagen bedenktijd) meer heb. <span lang="ar" dir="rtl">بدي الدخول فوراً، وبعرف إنه بعدها ما فيني أرجّع الاشتراك خلال 14 يوم.</span></span></label><button class="btn" id="pay">Betalen met iDEAL, Apple Pay, kaart of overschrijving · <span lang="ar" dir="rtl">ادفع</span></button>'}
+        ${st.bitcoin ? '<button class="btn ghost" id="paybtc">Betalen met Bitcoin · <span lang="ar" dir="rtl">بيتكوين</span></button>' : ''}
         <p class="small">Je betaalt één keer. Er is <b>geen automatische verlenging</b>. Bij een bankoverschrijving krijg je toegang zodra het geld binnen is (1–2 werkdagen).</p>
       </div>
       <form id="cform" class="codeform"><label><span class="lt"><span>Heb je een kortingscode?</span><span lang="ar" dir="rtl">عندك كود خصم؟</span></span><input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"></label><button class="btn ghost" type="submit">Code inwisselen</button></form>
@@ -138,7 +170,7 @@
     $('#logout').onclick = logout;
     if (preset) { code = preset.code; $('.price b').innerHTML = `<s>€${esc(preset.full)}</s> €${esc(preset.price.toFixed(2).replace('.', ','))}`; $('#cform [name=code]').value = preset.code; msg(`Je kortingscode ${preset.code} is toegepast: ${preset.percent}% korting.`, 'ok'); }
     const pay = async method => {
-      const b = method === 'bitcoin' ? $('#paybtc') : $('#pay'); busy(b, true); msg('');
+      const b = method === 'bitcoin' ? $('#paybtc') : $('#pay'); if ($('#agree') && !$('#agree').checked) { $('#agree').focus(); return msg('Zet eerst het vinkje hierboven aan. · حط علامة الصح فوق أول.', 'no'); } busy(b, true); msg('');
       try { const j = await api('checkout', { method: 'POST', body: JSON.stringify({ code, method }) }); location.href = j.url; }
       catch (err) { msg(err.message, 'no'); busy(b, false); }
     };
@@ -208,28 +240,36 @@
     if (!d) { d = document.createElement('dialog'); d.id = 'acctdlg'; d.className = 'acctdlg'; document.body.appendChild(d); }
     const until = new Date(st.paid_until);
     const left = Math.max(0, Math.ceil((until - Date.now()) / 864e5));
-    d.innerHTML = `<form method="dialog"><h3>Mijn account <span lang="ar">· حسابي</span></h3><p><b>${esc(st.email)}</b></p><p>${st.admin ? 'Beheerder: altijd toegang.' : `Toegang tot <b>${until.toLocaleDateString('nl-NL')}</b> (nog ${left} dagen).`}</p><p class="small">Je voortgang wordt bewaard in je account, dus ook op je telefoon en computer.</p>${st.admin ? '<p><a class="btn ghost" href="/admin">Beheerpaneel openen</a></p>' : ''}<div class="row"><button class="btn ghost" value="close">Sluiten</button><button class="btn" type="button" id="lo">Uitloggen</button></div></form>`;
+    d.innerHTML = `<form method="dialog"><h3>Mijn account · <span lang="ar">حسابي</span></h3><p><b>${esc(st.email)}</b></p><p>${st.admin ? 'Beheerder: altijd toegang.' : `Toegang tot <b>${until.toLocaleDateString('nl-NL')}</b> (nog ${left} dagen).`}</p><p class="small">Je voortgang wordt bewaard in je account, dus ook op je telefoon en computer.</p>${st.admin ? '<p><a class="btn ghost" href="/admin">Beheerpaneel openen</a></p>' : ''}<div class="row"><button class="btn ghost" value="close">Sluiten</button><button class="btn" type="button" id="lo">Uitloggen</button></div></form>`;
     d.querySelector('#lo').onclick = logout; d.showModal();
   }
 
+  async function lastPayment() {
+    try { const r = await fetch(C.SUPABASE_URL + '/rest/v1/payments?select=status,method,processed&order=created_at.desc&limit=1', { headers: { apikey: C.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + S.access_token } }); const [p] = await r.json(); return p || null; } catch { return null; }
+  }
   async function waitForPayment() {
-    msg('Betaling wordt gecontroleerd… · عم نتأكد من الدفع…');
+    msg('Betaling wordt gecontroleerd…');
     for (let i = 0; i < 20; i++) {
       await new Promise(r => setTimeout(r, 3000));
-      try { const st = await api('status'); if (st.active) return st; } catch {}
+      try { const st = await api('status'); if (st.active) return { st }; } catch {}
+      const p = await lastPayment();
+      if (p && ['canceled', 'failed', 'expired'].includes(p.status)) return { failed: true };
+      if (p && p.status === 'open' && p.method === 'banktransfer') return { bank: true };
     }
-    return null;
+    return {};
   }
 
   async function start() {
-    if (!configured) { box().innerHTML = '<p class="amsg no">De website is nog niet gekoppeld aan de database. Vul assets/config.js in (zie SETUP.md).</p>'; return; }
+    if (!configured) { box().innerHTML = '<p class="amsg no">De website werkt nu even niet. Probeer het later opnieuw. <span lang="ar" dir="rtl">الموقع مو شغّال هلق، جرّب بعدين.</span></p>'; return; }
     if (!(await token())) { const m = new URLSearchParams(location.search).get('m'); return viewLogin(m || (localStorage.getItem('tb-known') ? 'login' : 'signup')); }
     if (recovery) return viewNewPassword();
     box().innerHTML = '<p class="amsg">Even geduld… · لحظة…</p>';
     try {
       let st = await api('status');
       S.user = S.user || { email: st.email }; if (!S.user.id) { const u = await auth('user', null, 'GET', S.access_token); S.user = { id: u.id, email: u.email }; } keep();
-      const pend = localStorage.getItem(PEND);
+      let pend = localStorage.getItem(PEND);
+      if (!pend && !st.active && !st.admin) { try { const u = await auth('user', null, 'GET', S.access_token); const mc = u.user_metadata && u.user_metadata.code; if (mc && !localStorage.getItem('tb-used:' + mc)) pend = mc; } catch {} }
+      if (pend) localStorage.setItem('tb-used:' + pend, '1');
       if (pend && !st.active) {
         localStorage.removeItem(PEND);
         try { const j = await api('redeem', { method: 'POST', body: JSON.stringify({ code: pend }) }); if (j.kind === 'free') st = await api('status'); else return viewPay(st, '', { code: pend, ...j }); }
@@ -237,8 +277,11 @@
       }
       if (!st.active && new URLSearchParams(location.search).has('paid')) {
         history.replaceState(null, '', '/');
-        const ok = await waitForPayment();
-        if (ok) st = ok; else return viewPay(st, 'We hebben je betaling nog niet ontvangen. Bij een bankoverschrijving kan dit 1–2 werkdagen duren; daarna kun je gewoon inloggen.');
+        const w = await waitForPayment();
+        if (w.st) st = w.st;
+        else if (w.failed) return viewPay(st, 'De betaling is niet gelukt of geannuleerd. Je hebt niets betaald. Probeer het opnieuw. · الدفع ما زبط أو انلغى، وما دفعت شي. جرّب كمان مرة.');
+        else if (w.bank) return viewPay(st, 'Je overschrijving is gestart. De gegevens staan in je e-mail. Zodra het geld binnen is (1–2 werkdagen) heb je toegang. Betaal dus niet nog een keer. · بلّشت التحويل البنكي والتفاصيل بإيميلك. أول ما توصل المصاري (يوم أو يومين) بيفتح حسابك، فلا تدفع مرة تانية.');
+        else return viewPay(st, 'We hebben je betaling nog niet ontvangen. Ververs de pagina over een paar minuten. · لسا ما وصلنا الدفع. حدّث الصفحة بعد كم دقيقة.');
       }
       if (st.active) return openApp(st);
       viewPay(st);

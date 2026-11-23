@@ -14,5 +14,15 @@ data = subprocess.run(['node','-e',
   str(root/'src/questions.js')], capture_output=True, text=True, check=True).stdout
 d = json.loads(data)
 out = json.dumps({'html': html, 'questions': d['QUESTIONS'], 'qt': d['QT']}, ensure_ascii=False, separators=(',',':'))
-(root/'content.json').write_text(out, encoding='utf8')
-print('content.json', len(out)//1024, 'KB')
+# The lessons are paid content and this repo is public: only an AES-256-GCM encrypted copy is committed.
+# The key lives in the database (table app_secrets, name content_key) and in ~/.tb_content_key (never in git).
+import os, base64
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+key = bytes.fromhex(open(os.path.expanduser('~/.tb_content_key')).read().strip())
+def enc(data: bytes) -> str:
+    iv = os.urandom(12); return base64.b64encode(iv + AESGCM(key).encrypt(iv, data, None)).decode()
+(root/'content.enc').write_text(enc(out.encode('utf8')))
+src_bundle = json.dumps({'app.html': html, 'questions.js': q}, ensure_ascii=False).encode('utf8')
+(root/'private.enc').write_text(enc(src_bundle))
+(root/'content.json').write_text(out, encoding='utf8')   # local only (ignored by git)
+print('content.enc', len(out)//1024, 'KB (encrypted)')
