@@ -538,7 +538,7 @@ svg:not(.playing):not(.moving) .act.turnR .ir,svg:not(.playing):not(.moving) .ac
 .skip{position:absolute;left:-9999px;top:8px;z-index:100;background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:800}
 .skip:focus{left:12px}
 .haz .hopts{margin-top:12px}
-.stage.frozen::before{content:"⏸ Wat doe je? · شو بتعمل؟";white-space:nowrap;font-size:13px!important;position:absolute;z-index:4;pointer-events:none;right:auto;bottom:auto;left:50%;top:12px;transform:translateX(-50%);background:#0b111acc;color:#fff;font:800 14px/1 Overpass,Arial,sans-serif;padding:8px 14px;border-radius:999px}
+.stage.frozen::before{content:"⏸ Wat doe je? · \2067شو بتعمل؟\2069";direction:ltr;white-space:nowrap;font-size:13px!important;position:absolute;z-index:4;pointer-events:none;right:auto;bottom:auto;left:50%;top:12px;transform:translateX(-50%);background:#0b111acc;color:#fff;font:800 14px/1 Overpass,Arial,sans-serif;padding:8px 14px;border-radius:999px}
 .stage{position:relative}
 [dir=rtl]{unicode-bidi:isolate}
 @media(max-width:640px){.toast{bottom:max(84px,env(safe-area-inset-bottom))}}
