@@ -224,7 +224,19 @@ const HAZ=[
   e:'De fietser moet zo uitwijken voor de geparkeerde auto en komt dan voor je rijden. Er is nog ruimte: gas loslaten en afstand houden.',ea:'الدراجة رح تطلع لنص الطريق لتمرق جنب السيارة المصفوفة. لسا في مسافة: شيل رجلك وخلّي مسافة.'},
  {id:'h8',d:{h:210,scene:roadH,label:'Je rijdt op een rechte weg. Achter je nadert een ambulance met zwaailicht en sirene.',a:[{k:'amb',c:'#eee34a',p:'M-200 138 H460'},{k:'car',c:BL,me:1,p:'M60 138 H460'}]},
   tl:{dur:2200,tracks:[{i:0,rest:false,keys:[[0,0],[2200,.42]]},{i:1,rest:false,keys:[[0,0],[2200,.16]]}]},a:1,
-  e:'Een ambulance met zwaailicht en sirene wil erlangs. Gas loslaten, rustig opzij en ruimte maken. Niet plotseling remmen.',ea:'إسعاف مشغّل الضو والصفارة بدو يمرق. شيل رجلك، تنحّى بهدوء وافسحله الطريق، وما تفرمل فجأة.'}];
+  e:'Een ambulance met zwaailicht en sirene wil erlangs. Gas loslaten, rustig opzij en ruimte maken. Niet plotseling remmen.',ea:'إسعاف مشغّل الضو والصفارة بدو يمرق. شيل رجلك، تنحّى بهدوء وافسحله الطريق، وما تفرمل فجأة.'},
+ {id:'h9',d:{scene:()=>street({park:1}),label:'Rustige woonstraat. Er staan auto’s geparkeerd, maar er beweegt niemand.',a:[PARK(70),PARK(170),{k:'car',c:BL,me:1,p:'M180 340 V-40'}]},
+  tl:{dur:2200,tracks:[{i:2,rest:false,keys:[[0,0],[2200,.3]]}]},a:2,
+  e:'Er gebeurt niets bijzonders en je rijdt rustig. Er is geen gevaar: je doet niets.',ea:'ما في شي غريب وانت ماشي بهدوء. ما في خطر: ولا شي.'},
+ {id:'h10',d:{scene:()=>street({zebra:100}),label:'Er komt een zebrapad. Een voetganger loopt naar de rand en gaat oversteken.',a:[{k:'walk',p:'M104 115 H218'},{k:'car',c:BL,me:1,p:'M180 340 V-40'}]},
+  tl:{dur:2400,tracks:[{i:0,keys:[[0,0],[1000,0],[2400,.45]]},{i:1,rest:false,keys:[[0,0],[2400,.3]]}]},a:0,
+  e:'De voetganger gaat het zebrapad op. Je moet hem voor laten gaan, dus je remt en stopt.',ea:'الشخص عم يقطع على ممر المشاة. لازم تخلّيه يمرق، فبتفرمل وبتوقف.'},
+ {id:'h11',d:{h:210,scene:roadH,label:'Voor je rijdt een auto veel langzamer dan jij. Je komt er snel bij.',a:[{k:'car',c:GY,p:'M240 138 H620'},{k:'car',c:BL,me:1,p:'M-40 138 H460'}]},
+  tl:{dur:2200,tracks:[{i:0,rest:false,keys:[[0,0],[2200,.08]]},{i:1,rest:false,keys:[[0,0],[2200,.3]]}]},a:1,
+  e:'De auto voor je rijdt langzaam en de afstand wordt kleiner. Laat het gas los en houd afstand. Remmen is nog niet nodig.',ea:'السيارة قدامك بطيئة والمسافة عم تصغر. شيل رجلك وخلّي مسافة. لسا ما لازم تفرمل.'},
+ {id:'h12',d:{h:210,scene:roadH,label:'Een tegenligger rijdt op zijn eigen weghelft voorbij.',a:[{k:'car',c:RD,p:'M380 95 H-80'},{k:'car',c:BL,me:1,p:'M-40 138 H460'}]},
+  tl:{dur:2200,tracks:[{i:0,rest:false,keys:[[0,0],[2200,.55]]},{i:1,rest:false,keys:[[0,0],[2200,.3]]}]},a:2,
+  e:'De tegenligger blijft netjes op zijn eigen kant. Er is geen gevaar: je doet niets.',ea:'السيارة الجاية بوجهك ماشية بجهتها. ما في خطر: ولا شي.'}];
 
 /* =========================================================
    ENGINE
