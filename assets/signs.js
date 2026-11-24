@@ -115,7 +115,7 @@ Object.assign(SG,{
  C10:['c',ringS(`<g transform="translate(-2 2)">${miniCar(38,46,K)}<rect x="56" y="44" width="18" height="12" rx="2" fill="${K}"/><path d="M52 52 H56" stroke="${K}" stroke-width="2"/><circle cx="65" cy="58" r="3.4" fill="${K}"/></g>`)],
  C14:['c',ringS(`<g fill="none" stroke="${K}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 52) scale(.62) translate(-50 -61)"><circle cx="30" cy="61" r="12"/><circle cx="70" cy="61" r="12"/><path d="M30 61 L43 41 H61 L70 61 M43 41 L52 61 L61 41"/></g>`)],
  C16:['c',ringS(person(50,56,K,1.2))],
- C19:['c',ringS(`${T('3,5 m',17,57)}<path d="M50 22 L44 30 H56 Z M50 78 L44 70 H56 Z" fill="${K}"/>`)],
+ C19:['c',ringS(`${T('3,5 m',17,57)}<path d="M50 31 L44 23 H56 Z M50 69 L44 77 H56 Z" fill="${K}"/>`)],
  F1:['c',ringS(`<g transform="translate(36 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="${R}"/><rect x="-6" y="-9" width="12" height="6" rx="1.5" fill="#fff"/></g><g transform="translate(64 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="${K}"/><rect x="-6" y="-9" width="12" height="6" rx="1.5" fill="#fff"/></g>`)],
  F7:['c',ringS(`<path d="M60 74 V44 A10 10 0 0 0 40 44 V60" stroke="${K}" stroke-width="5.5" fill="none"/><path d="M32 56 L40 68 L48 56 Z" fill="${K}"/><path d="M24 76 L76 24" stroke="${R}" stroke-width="6"/>`)],
  E6:['s',boxS(`<circle cx="44" cy="26" r="5.5" fill="#fff"/><path d="M44 33 V54 H62 L68 72" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M36 50 A16 16 0 1 0 60 66" stroke="#fff" stroke-width="5" fill="none"/>`)],
@@ -165,3 +165,66 @@ const EXTRA=[
  ['E6','E6','parkeren','Gehandicaptenparkeerplaats','Alleen voor voertuigen van mensen met een gehandicaptenparkeerkaart.','صف بس لأصحاب بطاقة الإعاقة.'],
  ['E10','E10','parkeren','Parkeerschijfzone (blauwe zone)','Parkeren mag alleen met een parkeerschijf, voor de tijd op het bord.','الصف بس مع قرص الوقت، وللمدة المكتوبة.']
 ];
+
+/* ---------- more exam signs ---------- */
+const truck=(x,y,c=K,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-20" y="-12" width="26" height="18" rx="1.5" fill="${c}"/><path d="M8 -6 H16 L21 0 V6 H8 Z" fill="${c}"/><circle cx="-13" cy="9" r="4" fill="${c}"/><circle cx="14" cy="9" r="4" fill="${c}"/></g>`;
+const moto=(x,y,c=K,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="-14" cy="6" r="7"/><circle cx="14" cy="6" r="7"/><path d="M-14 6 L-4 -4 H8 L14 6 M8 -4 L5 -10 H10"/><path d="M-6 -4 L-2 -10 H4" /></g>`;
+const blueC=i=>`<circle cx="50" cy="50" r="47.5" fill="${B}"/><circle cx="50" cy="50" r="44.5" fill="none" stroke="#fff" stroke-width="2.4"/>${i||''}`;
+const zoneEnd=i=>`<rect x="6" y="2" width="88" height="96" rx="8" fill="#fff"/><rect x="9" y="5" width="82" height="90" rx="6" fill="none" stroke="${K}" stroke-width="2"/>${i}<path d="M16 90 L84 10" stroke="#555" stroke-width="5"/>`;
+const bike=(c,s=1)=>`<g fill="none" stroke="${c}" stroke-width="${5/s*0.8}" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 52) scale(${s}) translate(-50 -61)"><circle cx="30" cy="61" r="12"/><circle cx="70" cy="61" r="12"/><path d="M30 61 L43 41 H61 L70 61 M43 41 L52 61 L61 41"/></g>`;
+Object.assign(SG,{
+ B5:['t',warnS(`<path d="M48 38 V77" stroke="${K}" stroke-width="10"/><path d="M48 58 H67" stroke="${K}" stroke-width="4.5"/>`)],
+ C7:['c',ringS(truck(52,52,K,1.05))],
+ C11:['c',ringS(moto(50,48,K,1.05))],
+ C17:['c',ringS(`${T('10 m',19,57)}<path d="M20 50 L28 44 V56 Z M80 50 L72 44 V56 Z" fill="${K}"/>`)],
+ C18:['c',ringS(`${T('2,2 m',17,57)}<path d="M20 50 L28 44 V56 Z M80 50 L72 44 V56 Z" fill="${K}"/><path d="M20 30 V70 M80 30 V70" stroke="${K}" stroke-width="0"/>`)],
+ C20:['c',ringS(`${T('10 t',22,48)}<path d="M28 60 H72" stroke="${K}" stroke-width="4"/><circle cx="38" cy="68" r="5" fill="${K}"/><circle cx="62" cy="68" r="5" fill="${K}"/>`)],
+ C21:['c',ringS(T('15 t',24,59))],
+ C22:['c',ringS(`<rect x="30" y="34" width="40" height="30" rx="2" fill="#f28c00"/><rect x="30" y="47" width="40" height="3" fill="${K}"/>`)],
+ D3:['c',blueC(`<path d="M50 50 V82" stroke="#fff" stroke-width="9"/><path d="M50 50 L30 30 M50 50 L70 30" stroke="#fff" stroke-width="8"/><path d="M22 22 L36 24 L24 36 Z M78 22 L64 24 L76 36 Z" fill="#fff"/>`)],
+ E5:['s',boxS(`${T('TAXI',24,78,'#fff')}${miniCar(50,40,'#fff')}`)],
+ E7:['s',boxS(`<text x="50" y="44" font-family="Overpass,Arial,sans-serif" font-weight="800" font-size="40" text-anchor="middle" fill="#fff">P</text>${truck(50,68,'#fff',.85)}`)],
+ E9:['s',boxS(`${T('P',46,52,'#fff')}<rect x="14" y="62" width="72" height="22" rx="3" fill="#fff"/>${T('vergunning',11,77,B)}`)],
+ E11:['z',zoneEnd(`<rect x="20" y="14" width="34" height="40" rx="4" fill="#9ab0d6"/><text x="37" y="47" font-family="Overpass,Arial,sans-serif" font-weight="800" font-size="32" text-anchor="middle" fill="#fff">P</text><circle cx="68" cy="34" r="13" fill="none" stroke="#999" stroke-width="3"/>${T('ZONE',19,87,'#888')}`)],
+ F2:['c',`<circle cx="50" cy="50" r="46" fill="#fff" stroke="#2a2a2a" stroke-width="2.5"/><g transform="translate(36 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="#9a9a9a"/></g><g transform="translate(64 52)"><rect x="-9" y="-13" width="18" height="24" rx="5" fill="#9a9a9a"/></g><path d="M24 76 L76 24 M18 66 L66 18 M34 82 L82 34" stroke="#2a2a2a" stroke-width="3"/>`],
+ F5:['c',ringS(`<path d="M37 80 V36" stroke="${R}" stroke-width="7"/><path d="M37 24 L28 38 H46 Z" fill="${R}"/><path d="M63 20 V64" stroke="${K}" stroke-width="7"/><path d="M63 76 L54 62 H72 Z" fill="${K}"/>`)],
+ F6:['s',boxS(`<path d="M37 82 V34" stroke="#fff" stroke-width="7"/><path d="M37 22 L28 36 H46 Z" fill="#fff"/><path d="M63 18 V62" stroke="${R}" stroke-width="7"/><path d="M63 74 L54 60 H72 Z" fill="${R}"/>`)],
+ G4:['s',boxS(`<path d="M20 62 H80 V73 H20 Z M29 62 L37 45 H63 L71 62 Z" fill="#fff"/><circle cx="33" cy="75" r="6.5" fill="#fff"/><circle cx="67" cy="75" r="6.5" fill="#fff"/>`)+`<path d="M14 88 L86 14" stroke="${R}" stroke-width="7" stroke-linecap="round"/>`],
+ G6:['s',boxS(`<path d="M17 57 L38 38 L59 57 V80 H17 Z" fill="#fff"/><circle cx="74" cy="47" r="5.5" fill="#fff"/><path d="M74 54 V68 M66 60 H82 M74 68 L67 81 M74 68 L81 81" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`)+`<path d="M14 88 L86 14" stroke="${R}" stroke-width="7" stroke-linecap="round"/>`],
+ G12a:['c',blueC(`<g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 40) scale(.55) translate(-50 -55)"><circle cx="30" cy="61" r="12"/><circle cx="70" cy="61" r="12"/><path d="M30 61 L43 41 H61 L70 61 M43 41 L52 61 L61 41"/></g>${moto(50,68,'#fff',.75)}`)],
+ G13:['w',`<rect x="1" y="20" width="98" height="60" rx="7" fill="#000"/><rect x="6" y="25" width="88" height="50" rx="4" fill="none" stroke="#fff" stroke-width="2.6"/>${T('fietspad',20,57,'#fff')}`],
+ J17:['t',warnS(`<path d="M38 80 V66 Q38 56 44 50 V38 M62 80 V66 Q62 56 56 50 V38" stroke="${K}" stroke-width="5" fill="none"/>`)],
+ J26:['t',warnS(`<path d="M22 66 H52 L60 58" stroke="${K}" stroke-width="5" fill="none"/>${miniCar(54,52,K)}<path d="M58 80 q5 -4 10 0 t10 0" stroke="${K}" stroke-width="3" fill="none"/>`)],
+ J29:['t',warnS(`<path d="M42 80 V42" stroke="${K}" stroke-width="5.5"/><path d="M42 34 L35 46 H49 Z" fill="${K}"/><path d="M58 40 V76" stroke="${K}" stroke-width="5.5"/><path d="M58 84 L51 72 H65 Z" fill="${K}"/>`)],
+ J31:['t',warnS(`<path d="M28 50 Q46 44 62 50 M28 60 Q50 54 72 60 M28 70 Q44 64 58 70" stroke="${K}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M60 46 L70 50 L60 54 Z" fill="${K}"/>`)],
+ J33:['t',warnS(`${miniCar(50,44,K)}${miniCar(50,64,K)}`)],
+ L13:['s',boxS(`<path d="M16 78 V52 A34 34 0 0 1 84 52 V78 H70 V54 A20 20 0 0 0 30 54 V78 Z" fill="#fff"/><path d="M50 58 V66 M50 72 V78" stroke="#fff" stroke-width="3"/>`)],
+});
+EXTRA.push(
+ ['B5','B5','voorrang','Voorrangskruispunt (zijweg rechts)','Je hebt voorrang op de weg die van rechts komt.','عندك أفضلية على الطريق الجانبي اللي جاي من اليمين.'],
+ ['C7','C7','verbod','Gesloten voor vrachtauto’s','Vrachtauto’s mogen hier niet in. Gewone auto’s wel.','ممنوع للشاحنات. السيارات العادية مسموحة.'],
+ ['C11','C11','verbod','Gesloten voor motorfietsen','Motorfietsen mogen hier niet in.','ممنوع للموتورات.'],
+ ['C17','C17','verbod','Maximale lengte','Voertuigen (met lading) die langer zijn dan op het bord mogen hier niet in.','ممنوع للمركبات (مع الحمولة) اللي أطول من الرقم.'],
+ ['C18','C18','verbod','Maximale breedte','Voertuigen die breder zijn dan op het bord mogen hier niet in.','ممنوع للمركبات اللي أعرض من الرقم.'],
+ ['C20','C20','verbod','Maximale aslast','Geen voertuigen met een aslast boven het getal op het bord.','ممنوع للمركبات اللي وزنها على المحور الواحد أكتر من الرقم.'],
+ ['C21','C21','verbod','Maximaal totaalgewicht','Geen voertuigen die (met lading) zwaarder zijn dan het getal op het bord.','ممنوع للمركبات اللي وزنها الكامل (مع الحمولة) أكتر من الرقم.'],
+ ['C22','C22','verbod','Gesloten voor gevaarlijke stoffen','Voertuigen met gevaarlijke stoffen (oranje bord) mogen hier niet in.','ممنوع للمركبات اللي حاملة مواد خطرة (اللوحة البرتقالية).'],
+ ['D3','D3','gebod','Beide kanten passeren toegestaan','Je mag aan de linker- en aan de rechterkant langs het obstakel rijden.','مسموح تمرق من اليمين أو من الشمال.'],
+ ['E5','E5','parkeren','Taxistandplaats','Alleen voor taxi’s.','موقف للتكسيات بس.'],
+ ['E7','E7','parkeren','Laden en lossen','Hier mag je alleen stilstaan om direct goederen te laden of te lossen.','وقوف بس لتحميل وتنزيل البضاعة مباشرة.'],
+ ['E9','E9','parkeren','Parkeren voor vergunninghouders','Alleen parkeren met een parkeervergunning.','الصف بس للي معهم تصريح صف.'],
+ ['E11','E11','parkeren','Einde parkeerschijfzone','Hier stopt de blauwe zone. Een parkeerschijf is niet meer nodig.','نهاية المنطقة الزرقا. ما عاد لازم قرص الوقت.'],
+ ['F2','F2','verbod','Einde inhaalverbod','Vanaf hier mag je weer inhalen (als het veilig is).','نهاية منع التجاوز: من هون مسموح تتجاوز إذا آمن.'],
+ ['F5','F5','voorrang','Tegenliggers voor laten gaan','Smalle doorgang: verkeer van de andere kant gaat voor. Jij wacht.','ممر ضيق: الجاي من الجهة التانية بيمرق أول، وانت بتستنى.'],
+ ['F6','F6','voorrang','Voorrang op tegenliggers','Smalle doorgang: jij mag eerst. Tegenliggers wachten.','ممر ضيق: انت بتمرق أول، والجاي بوجهك بيستنى.'],
+ ['G4','G4','aanwijzing','Einde autoweg','Hier stopt de autoweg. Let op de nieuwe maximumsnelheid.','نهاية طريق السيارات. انتبه للسرعة الجديدة.'],
+ ['G6','G6','aanwijzing','Einde erf','Hier stopt het erf. De gewone regels gelden weer.','نهاية منطقة الـ erf. بترجع القواعد العادية.'],
+ ['G12a','G12a','gebod','Verplicht fiets-/bromfietspad','Fietsers en bromfietsers moeten dit pad gebruiken. Auto’s mogen er niet op.','مسار إجباري للدراجات والموتورات الصغيرة. ممنوع للسيارات.'],
+ ['G13','G13','aanwijzing','Onverplicht fietspad','Fietsers mogen dit pad gebruiken, maar het hoeft niet. Auto’s en brommers mogen er niet op.','مسار دراجات مو إجباري. ممنوع للسيارات والموتورات.'],
+ ['J17','J17','waarschuwing','Rijbaanversmalling','De weg wordt smaller. Let op tegenliggers.','الطريق عم يضيق. انتبه للجاي بوجهك.'],
+ ['J26','J26','waarschuwing','Beweegbare brug / kade','Gevaar: de weg loopt naar het water (kade). Rijd langzaam.','خطر: الطريق بيوصل عالمي (رصيف ميناء). خفّف.'],
+ ['J29','J29','waarschuwing','Tegenliggers','Let op: hier rijdt ook verkeer van de andere kant.','انتبه: في سيارات جاية من الجهة التانية.'],
+ ['J31','J31','waarschuwing','Zijwind','Let op: harde wind van opzij. Houd je stuur goed vast.','انتبه: هوا قوي من الجنب. امسك المقود منيح.'],
+ ['J33','J33','waarschuwing','File','Let op: er kan file staan. Rem op tijd.','انتبه: ممكن يكون في عجقة. فرمل بكّير.'],
+ ['L13','L13','aanwijzing','Tunnel','Er komt een tunnel. Doe je dimlicht aan en houd afstand.','جاي نفق. شغّل الضو الواطي وخلّي مسافة.']
+);
